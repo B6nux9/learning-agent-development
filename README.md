@@ -20,15 +20,16 @@
 
 | 阶段 | 等级 | 课程 | Capstone | 状态 |
 |---|---|---|---|---|
-| 一 | Layman→Beginner | L1 什么是 agent · L2 手写 agent loop · L3 tool use · L4 多工具 | 命令行多工具 agent | 🔵 进行中 |
+| 一 | Layman→Beginner | ~~L1 什么是 agent~~ ✅ · L2 手写 agent loop · L3 tool use · L4 多工具 | 命令行多工具 agent | 🔵 进行中 |
 | 二 | →Intermediate | L5 记忆与状态 · L6 上下文长度管理 · L7 RAG · L8 客服原型 | 知识库客服 agent 原型 | ⚪ 未开始 |
 | 三 | →Advanced | L9 评估 · L10 错误处理 · L11 成本/延迟/可观测性 · L12 打磨 | 可部署客服 agent（求职主力） | ⚪ 未开始 |
 | 四 | 拓展 | L13 多智能体 · L14 框架对比 · L15 前沿 | 选做 | ⚪ 未开始 |
 
 ## 当前进度
 
-- **当前等级**：Layman（起步）
-- **当前课程**：L1 — 什么是 agent
+- **当前等级**：Beginner（起步）
+- **当前课程**：L2 — 手写 agent loop
+- **已完成**：L1 什么是 agent（quiz 5/5 达标，环境跑通 hello_llm.py）
 - **最近更新**：2026-07-13
 
 ## 目录结构
