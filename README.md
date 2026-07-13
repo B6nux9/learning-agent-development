@@ -25,18 +25,17 @@
 | 三 | →Advanced | L9 评估 · L10 错误处理 · L11 成本/延迟/可观测性 · L12 打磨 | 可部署客服 agent（求职主力） | ⚪ 未开始 |
 | 四 | 拓展 | L13 多智能体 · L14 框架对比 · L15 前沿 | 选做 | ⚪ 未开始 |
 
-## 当前进度
+## 进度追踪
 
-- **当前等级**：Beginner（起步）
-- **当前课程**：L2 — 手写 agent loop
-- **已完成**：L1 什么是 agent（quiz 5/5 达标，环境跑通 hello_llm.py）
-- **最近更新**：2026-07-13
+实时进度、学习者画像、断点与「下一步」都记录在 **[PROGRESS.md](PROGRESS.md)**（跨 session
+交接文件）。本 README 只保留相对静态的课程大纲与等级体系。续学时先读 PROGRESS.md。
 
 ## 目录结构
 
 ```
 learning-agent-development/
-├── README.md          # 本文件：大纲、进度、等级追踪
+├── PROGRESS.md        # 跨 session 交接：进度 + 学习者画像 + 下一步
+├── README.md          # 本文件：大纲、等级体系（静态总览）
 ├── resources.md       # 5 个精选信息渠道
 ├── lesson-01/
 │   ├── notes.md       # 讲义
