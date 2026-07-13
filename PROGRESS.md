@@ -6,8 +6,11 @@
   懂每个组件的权衡，在面试里讲透细节。不追 Expert。
 - 起始日期 / 最近更新：2026-07-13 / 2026-07-13
 - 默认模型：**DeepSeek**（`deepseek-chat`，OpenAI 兼容，写法可迁移通义千问/GPT）
-- 环境：conda 环境 `agent`，路径 `E:\Anaconda\envs\agent`，Python 3.12
-- 仓库：本地 `E:\Agent\learning-agent-development\`；远端私有 https://github.com/B6nux9/learning-agent-development （**所有课程统一存 B6nux9 账号**）
+- 环境：conda 环境 `agent`，Python 3.12
+- 仓库（**用户在两台机器上学，按当前系统判断路径**）：
+  - **macOS**：本地 `/Users/el4435/learning-agent-development/`
+  - **Windows**：本地 `E:\Agent\learning-agent-development\`，conda 环境路径 `E:\Anaconda\envs\agent`
+  - 远端私有 https://github.com/B6nux9/learning-agent-development （**所有课程统一存 B6nux9 账号**，两机同步）
 
 ## 学习者画像（来自开课摸底，续学时别再重复问）
 - **已有基础**：会写 Python、调过大模型 API、懂 LLM 原理。但**代码/工程基本功偏弱**，
