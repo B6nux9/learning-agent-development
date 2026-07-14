@@ -10,7 +10,7 @@
 - 路径：**分级(tiered)**
 - 目标终点等级：**Advanced（第 4 级）** —— 能独立设计并搭出 production 级客服 agent，
   懂每个组件的权衡，在面试里讲透细节。不追 Expert。
-- 起始日期 / 最近更新：2026-07-13 / 2026-07-14
+- 起始日期 / 最近更新：2026-07-13 / 2026-07-14（L3 封版）
 - 默认模型：**DeepSeek**（`deepseek-chat`，OpenAI 兼容，写法可迁移通义千问/GPT）
 - 环境：conda 环境 `agent`，Python 3.12
 - 仓库（**用户在两台机器上学，按当前系统判断路径**）：
@@ -30,19 +30,21 @@
 ## 课程大纲与进度
 - [x] **L1 什么是 agent** —— 已完成，达标（quiz 5/5，跑通 hello_llm.py）
 - [x] **L2 手写 agent loop** —— 已完成，达标（作业 order_agent.py 跑通：单/双订单查询 + 「几点下班」不调工具直接答；quiz 5/5）
-- [ ] **L3 tool use 深入** —— **未开始**，等用户开口才教（勿抢跑）  ← **当前断点**
-- [ ] L4 多工具编排　→ 阶段一 capstone：命令行多工具 agent
+- [x] **L3 tool use 深入** —— 已完成，达标（作业 refund_agent.py 跑通：多工具/链式退款/错误回传/循环上限；quiz 3满分+2需补全）
+- [ ] **L4 多工具编排** —— **未开始**，等用户开口才教（勿抢跑）　→ 阶段一 capstone：命令行多工具 agent  ← **当前断点**
 - [ ] L5 记忆与状态 · L6 上下文长度管理 · L7 RAG · L8 客服原型　→ 阶段二 capstone
 - [ ] L9 评估 · L10 错误处理 · L11 成本/延迟/可观测性 · L12 打磨　→ 阶段三 capstone（求职主力）
 - [ ] L13-15 拓展（多智能体/框架/前沿）
 - capstone 状态：均未开始
 
 ## 当前掌握等级评估
-**Beginner 稳固，局部触到 Intermediate 的思考**。已能**独立手写 agent loop**（L2 作业一次跑通，
-function calling 四步、多工具单轮调用、停止条件、messages append 顺序都对），并主动推导出
-**记忆（L5）与上下文（L6）** 两个后续核心问题——超出 Beginner 该有的深度。
-工程/环境基本功仍是需持续留意的短板（L2 又问了 env 变量怎么设、终端会话一致性），
-但 L1 的坑（哪个 python、包装哪了）已能用 `sys.executable` / `conda info --envs` 自查。
+**Beginner 稳固，持续向 Intermediate 迁移**。已能独立手写 agent loop（L2）、并独立扩展工具/处理
+工具错误/理解链式调用的涌现性（L3），抓住了「**agent 能力来自工具、不来自 loop**」这一关键抽象。
+主动推导出 **记忆（L5）、上下文（L6）** 两个后续核心问题——超出 Beginner 深度。
+工程细节意识在增强（兜底代码、调试残留），但仍是相对短板：L3 作业里 ①漏写兜底 return（只写计数）
+②测试用的 `MAX_TURNS=0` 忘改回 8 导致 agent 罢工。已叮嘱**养成 commit 前 `git diff` 扫一眼**的习惯。
+环境问题（哪个 python/包装哪了/key 在不在）已能用 `sys.executable`/`conda info --envs`/`echo $KEY` 自查，
+且已把 DEEPSEEK_API_KEY 写进 macOS `~/.zshrc`(理解了 env 变量属 shell 会话、conda 不隔离它)。
 
 ## 关键软信息（下个 session 尤其要知道的）
 - **反复卡住/易错**：Python 环境管理（哪个 python、包装哪了、conda 环境是否有 python）。
@@ -55,6 +57,10 @@ function calling 四步、多工具单轮调用、停止条件、messages append
     与 **L6 上下文**，届时明确点回来"这就是你 L2 就想到的问题"。
 - **L2 已扎实、可略过**：function calling 四步握手、agent loop 骨架、TOOLS schema 各字段含义、
   "模型决策 / agent 本地执行"的分工、无状态 API 心智模型。
+- **L3 已扎实、可略过**：多工具 description 路由、"错误也是信息"(try/except→error JSON 回传→模型自愈)、
+  链式调用是 loop 涌现的(零新代码)、循环次数上限兜底、"agent 能力来自工具不来自 loop"这一抽象。
+- **L3 埋的伏笔**：30 工具会带来①选择困难②schema 每轮吃 token 撑大上下文 → L4 工具编排/分组、
+  进阶"按需检索工具"(思路同 L7 RAG)。学习者 Q5 只答出①,②(schema 占上下文)是我补的,L4 可回扣。
 - **流程改进（本次确立，已存记忆 material-creation-timing）**：三份材料分时创建——notes 讲授时就建、
   quiz 出题时就建、**只有 summary.pdf 等封版才生成**。以后每节照此，别再堆到封版一起做。
 - **PDF 生成方式（本机 macOS）**：无 pandoc/weasyprint；用 base anaconda 的 `markdown` 库转 HTML，
@@ -63,9 +69,12 @@ function calling 四步、多工具单轮调用、停止条件、messages append
   `E:\Agent`；GitHub 账号从误用的 el4435 改为指定的 **B6nux9**（el4435 上的旧副本待用户手动删）。
 
 ## 下一步（给下个 session 的明确指令）
-- **立刻要做**：**什么都不要做，等用户说"开始 L3 / 继续"**。L2 已封版，主动权在用户手里。
-  用户开口后再生成并教学 **L3 tool use 深入**（在 L2 单工具 loop 的基础上往深走：多工具、
-  参数校验/报错处理、`description` 如何影响调用准确率、并行 vs 串行工具调用等；具体大纲开课时定）。
+- **立刻要做**：**什么都不要做，等用户说"开始 L4 / 继续"**。L3 已封版，主动权在用户手里。
+  用户开口后再教 **L4 多工具编排**（阶段一收官课 + capstone）。L4 可回扣 L3 埋的伏笔:工具多了怎么办
+  ——按场景分组/只给相关工具、多步任务的编排。**L4 末尾是阶段一 capstone：命令行多工具 agent**
+  （把 L2~L4 的 loop+多工具+错误处理综合成一个能交互的命令行客服 agent；具体大纲开课时定）。
 - **需要注意（重要教训）**：**不要抢跑**——一节课收尾后停下等，不自动开下一课，不在答疑末尾催进度；
   只有用户明确说开始下一课才教。坚持 coaching 式给提示不给答案（用填空骨架，让他自己补核心逻辑）；
   materials 分时创建（notes/quiz 当场建，summary.pdf 封版才出）；每次 commit 后 `git push` 到 B6nux9。
+- **commit 前记得** `git diff` 扫一眼（别把 .DS_Store / 临时调试值/ key 文件误提交——历史上已发生过一次
+  误提交 deepseek_api.txt+.DS_Store 需回滚，.gitignore 已加，但仍要养成 add 前看一眼的习惯）。
