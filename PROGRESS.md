@@ -10,7 +10,7 @@
 - 路径：**分级(tiered)**
 - 目标终点等级：**Advanced（第 4 级）** —— 能独立设计并搭出 production 级客服 agent，
   懂每个组件的权衡，在面试里讲透细节。不追 Expert。
-- 起始日期 / 最近更新：2026-07-13 / 2026-07-15（L4 + 阶段一 capstone 封版）
+- 起始日期 / 最近更新：2026-07-13 / 2026-07-21（L5 封版）
 - 默认模型：**DeepSeek**（`deepseek-chat`，OpenAI 兼容，写法可迁移通义千问/GPT）
 - 环境：conda 环境 `agent`，Python 3.12
 - 仓库（**用户在两台机器上学，按当前系统判断路径**）：
@@ -34,8 +34,15 @@
 - [x] **L4 多工具编排** —— 已完成，达标（讲义/quiz 5满分；**阶段一 capstone `cli_agent.py` 跑通**：
   分组路由 order/refund/account + 会话内多轮记忆 + LLM-as-router；关键词法与 LLM 法两版都验证）
 - [x] **阶段一 capstone** —— 已完成（命令行多工具客服 agent，L2~L4 综合）
-- [ ] **L5 记忆与状态** —— **未开始**，等用户开口才教（勿抢跑）　← **当前断点**
-- [ ] L6 上下文长度管理 · L7 RAG · L8 客服原型　→ 阶段二 capstone
+- [x] **L5 记忆与状态** —— 已完成，达标（quiz 5/5；作业 `agent_with_memory.py` 跑通：
+  load/save memory.json + 注入 system prompt + `remember` 工具，**分两次运行验证跨重启记忆**）
+- [ ] **L6 上下文长度管理** —— **未开始**，等用户开口才教（勿抢跑）　← **当前断点**
+- [ ] L7 RAG · L8 客服原型　→ 阶段二 capstone
+- [ ] **⚠️ 待办（用户主动提出，优先级高）**：用户会把**目标岗位 JD** 存到本地（建议
+  `job-requirements/` 目录）。拿到后要做：①需求聚类（高频刚需/中频加分/低频噪音）
+  ②对照现有大纲做 gap 分析 ③**调整大纲与顺序**（该加的加、该砍的砍、高频的提前）
+  ④更新 PROGRESS 并 commit。**还需问清用户的投递时间线**（半年以上 = 按部就班；
+  1~3 个月 = 大幅压缩、优先简历项目 + 高频面试考点）。
 - [ ] L9 评估 · L10 错误处理 · L11 成本/延迟/可观测性 · L12 打磨　→ 阶段三 capstone（求职主力）
 - [ ] L13-15 拓展（多智能体/框架/前沿）
 - capstone 状态：均未开始
@@ -75,6 +82,20 @@
 - **本节暴露/仍需盯的工程点**：①`route_keyword` 改名时把函数体整段注释掉→隐式 return None(切开关会 KeyError)，
   是"改一半"的残留；②`messages` 混血列表(dict + SDK 对象)访问方式不统一→AttributeError；
   ③fallback 会掩盖 bug，调试期要用 `repr`/`!r` 打出兜底前真实值。这些都属"工程基本功"短板，持续留意。
+- **L5 已扎实、可略过**：短期/长期记忆与状态三分("记忆给模型看，状态给代码用")、长期记忆=存+取闭环、
+  为什么注入 system 而非伪装 user 消息、`remember` 工具让模型自己决定何时存。
+- **L5 两次翻车（都是高价值教训，后续要反复呼应）**：
+  ① **漏写兜底 return（惯犯！L3 已犯过一次）**：`build_system_prompt` 只写 `if memory:` 那支的 return，
+     空 memory 时静默返回 `None` → API 报 `content should be a string`。已叮嘱自查动作：
+     **写完带返回值的函数，扫一眼每个分支是否都 return**。**这是他最顽固的短板，下次仍要盯。**
+  ② **模型"嘴上说做了、其实没调工具"**：模型回"我已经记下了😊"但 `memory.json` 不存在，
+     `remember` 从未被调用。靠 ①查物证(文件) ②打印真实 `tool_calls` 才发现。
+     治本=**prompt 太软**，改强命令并点名禁掉偷懒话术("绝对不要只嘴上说'已记住'却不调用工具")。
+     → **金句：验收 agent 永远看动作(tool_calls)，不看话术。** L11 可观测性回扣。
+- **Windows 环境变量（本节踩坑，已解决）**：永久设 key 用
+  `[Environment]::SetEnvironmentVariable("DEEPSEEK_API_KEY","sk-...","User")`；
+  **关键坑：VSCode 启动时就把环境变量拍了快照**，改注册表后新开终端标签也读不到，**必须完全重启 VSCode**。
+  临时救急：`$env:DEEPSEEK_API_KEY = [Environment]::GetEnvironmentVariable("DEEPSEEK_API_KEY","User")`。
 - **流程改进（本次确立，已存记忆 material-creation-timing）**：三份材料分时创建——notes 讲授时就建、
   quiz 出题时就建、**只有 summary.pdf 等封版才生成**。以后每节照此，别再堆到封版一起做。
 - **PDF 生成方式**：
@@ -87,10 +108,13 @@
   `E:\Agent`；GitHub 账号从误用的 el4435 改为指定的 **B6nux9**（el4435 上的旧副本待用户手动删）。
 
 ## 下一步（给下个 session 的明确指令）
-- **立刻要做**：**什么都不要做，等用户说"开始 L5 / 继续"**。L4 + 阶段一 capstone 已封版，主动权在用户手里。
-  用户开口后进入 **阶段二**，先教 **L5 记忆与状态**。L5 直接回扣 capstone：他已亲手做了「会话内多轮记忆」
-  （累积 messages），L5 讲它的**边界**——messages 越滚越长怎么办、跨会话/重启后记忆怎么留、
-  短期(对话)vs长期(用户档案)记忆之分。明确点回"这就是你 L2 就想到、L4 又亲手搭的问题"。
+- **立刻要做（优先于开新课）**：用户已主动提出要**用目标岗位 JD 反向优化课程**，并会把 JD 存到本地
+  （建议 `job-requirements/`）。**先问他 JD 存好了没 / 存在哪**，读完做需求聚类 + gap 分析 + 调整大纲，
+  更新 PROGRESS 后 commit。**同时要问清投递时间线**（决定是按部就班还是大幅压缩）。
+  猜测可能需补进大纲的：LangChain/LlamaIndex 等框架、向量库选型、Prompt 工程、部署工程化、
+  Dify/Coze 平台、模型微调。
+- **JD 这轮做完后**：等用户开口再教 **L6 上下文长度管理**（他从 L2 就最惦记的问题，且 L5 已埋两处伏笔：
+  messages 越滚越长、记忆存不下）。**勿抢跑**。
 - **需要注意（重要教训）**：**不要抢跑**——一节课收尾后停下等，不自动开下一课，不在答疑末尾催进度；
   只有用户明确说开始下一课才教。坚持 coaching 式给提示不给答案（用填空骨架，让他自己补核心逻辑）；
   materials 分时创建（notes/quiz 当场建，summary.pdf 封版才出）；每次 commit 后 `git push` 到 B6nux9。
