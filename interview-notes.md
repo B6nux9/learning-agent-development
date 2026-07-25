@@ -184,9 +184,47 @@ Windows 上用 `[Environment]::SetEnvironmentVariable(...,"User")` 设的永久�
 
 ---
 
+## 七、L7:RAG 与向量数据库(新增,JD 8/10 面试必问)
+
+### "讲讲 RAG 是怎么工作的?"
+两个阶段:①离线建索引(文档→切块→embedding→存向量库)②在线检索生成(问题 embedding→
+向量库找 top-k→塞 prompt→grounding 生成)。本质:让 LLM 回答前先"查资料",开卷考试。
+
+### "embedding 为什么能做语义检索?关键词匹配不行吗?"
+embedding 把文本变成向量,语义相近→向量相近。"马铃薯 vs 土豆"字面零重叠但语义相同,
+关键词匹配漏,embedding 命中。这是 RAG 能"模糊匹配"的根基。
+
+### "向量数据库解决什么?"(别混三个部件)
+**向量库负责"找得快"**(海量向量里毫秒找 top-k,HNSW 把 O(N)→~O(logN));
+top-k 负责"塞得少"(控成本+抗干扰);LLM 负责"答得好"。三件事别混。
+
+### "你用什么向量库,为什么?"(选型话术)
+Chroma:嵌入式/零配置/HNSW/sqlite 持久化,适合中小规模+快速迭代。
+上千万级或高并发→Milvus/Qdrant;数据在 Postgres→pgvector;只要极致速度→FAISS。
+底层都用 ANN 索引。—— 展示懂 landscape,不是只会一个工具。
+
+### "RAG 效果不好怎么排查?"(本节亲手验证,王牌回答)
+**先查 chunking**。我实测过:同一份 embedding+向量库+prompt,只把切法从固定字符窗口
+换成按语义边界(标题)切,检索和答案质量都上一个台阶——固定窗口会切碎句子、跨段落,
+检索到的块本身就不干净,模型自然答不利索。生产用 RecursiveCharacterTextSplitter。
+chunk_size / overlap 也是旋钮:overlap 防关键信息被切在块边界丢失。
+
+### "RAG 还能怎么优化?"(埋点,显深度)
+rerank 重排(粗召回→cross-encoder 精排)、hybrid 检索(向量+BM25)、query rewrite、
+metadata 过滤、RAG 评估(recall@k/忠实度)、embedding 缓存+重试。
+大知识库:embedding 分批(单次~2048 上限)、id 用内容哈希做增量更新去重(不重复嵌)。
+
+### "怎么防止 RAG 幻觉?"
+grounding:强 prompt 约束"只依据资料回答,没有就说暂无,不得编造";
+第二道防线可用检索 distance 阈值,太远就判无相关、不硬塞给 LLM。
+
+### 工程:依赖管理用 uv(可写进简历)
+uv init/add/sync;pyproject.toml + uv.lock 入库,双机一键复现。比 conda 现代、快。
+
+---
+
 ## 待补(学完对应课程后回来填)
-- [ ] L6 遗留:**单元测试系统学习**(本节测试由教练代写,用户选择先专注实现)→ 阶段二 capstone 补
-- [ ] L7:RAG 与向量数据库(**JD 8/10,面试必问**)
+- [ ] L6 遗留:**单元测试系统学习**(测试由教练代写,用户选择先专注实现)→ 阶段二 capstone 补
 - [ ] L8:ReAct / Plan-and-Execute
 - [ ] L9:LangChain 实战(填第一节第 3 条)
 - [ ] L10:MCP
