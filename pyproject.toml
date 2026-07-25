@@ -1,0 +1,13 @@
+[project]
+name = "learning-agent-development"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "chromadb>=1.5.9",
+    "openai>=2.48.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

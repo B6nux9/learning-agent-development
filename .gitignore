@@ -10,3 +10,7 @@ deepseek_api.txt
 
 # agent 运行产物(含测试数据,不入库)
 memory.json
+chroma_db/
+
+# uv:虚拟环境不入库;pyproject.toml + uv.lock + .python-version 要入库(双机复现)
+.venv/
