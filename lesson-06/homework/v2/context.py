@@ -71,7 +71,22 @@ def find_safe_cut_index(messages: list[Message], keep_recent: int) -> int:
       e. 一路退到了 system 后面(退无可退)
     """
     # 你的代码:
-    raise NotImplementedError("TODO 1: find_safe_cut_index")
+    n = len(messages)
+
+    initial = n - keep_recent
+
+    if initial <= 1:
+        return 1
+
+    i = initial 
+    while i > 1 and i < n and messages[i]["role"] == "tool":
+        i -= 1
+
+    return i
+    
+    
+    
+
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -103,7 +118,17 @@ class ContextManager:
         """
         # TODO 2a:保存参数。顺便做参数校验——生产代码要对非法配置早失败(fail fast),
         #          而不是等运行时出诡异行为。比如 threshold <= 0、keep_recent < 0 应该直接报错。
-        raise NotImplementedError("TODO 2a: __init__")
+        self.summarizer = summarizer
+        self.threshold = threshold
+        self.keep_recent = keep_recent
+        self.strategy = strategy
+        
+        if threshold <= 0:
+            raise ValueError("threshold must be greater than 0")
+        if keep_recent < 0:
+            raise ValueError("keep_recent must be non-negative")
+        if strategy not in ["truncate", "summarize", "hybrid"]:
+            raise ValueError("strategy must be one of 'truncate', 'summarize', or 'hybrid'")
 
     def compact(self, messages: list[Message], current_tokens: int) -> CompactResult:
         """按阈值决定是否压缩,返回 CompactResult。
@@ -126,4 +151,25 @@ class ContextManager:
                             本模块不关心 token 怎么数出来的,那是调用方的事。
         """
         # 你的代码:
-        raise NotImplementedError("TODO 2b: compact")
+        if current_tokens <= self.threshold:
+            return CompactResult(messages=messages.copy(), compacted=False, dropped_count=0, kept_count=len(messages), summary=None)
+        if len(messages) <= 1:
+            return CompactResult(messages=messages.copy(), compacted=False, dropped_count=0, kept_count=len(messages), summary=None)
+        if self.strategy == "truncate":
+            safe_index = find_safe_cut_index(messages, self.keep_recent)
+            if safe_index == 1:
+                return CompactResult(messages=messages.copy(), compacted=False, dropped_count=0, kept_count=len(messages), summary=None)
+            new_messages = [messages[0]] + messages[safe_index:]
+            return CompactResult(messages=new_messages, compacted=True, dropped_count=safe_index-1, kept_count=len(messages)-safe_index, summary=None)
+        elif self.strategy == "summarize":
+            summary = self.summarizer(messages[1:])
+            new_messages = [messages[0], {"role": "system", "content": summary}]
+            return CompactResult(messages=new_messages, compacted=True, dropped_count=len(messages) - 1, kept_count=0, summary=summary)
+        elif self.strategy == "hybrid":
+            safe_index = find_safe_cut_index(messages, self.keep_recent)
+            if safe_index == 1:
+                return CompactResult(messages=messages.copy(), compacted=False, dropped_count=0, kept_count=len(messages), summary=None)
+            summary = self.summarizer(messages[1:safe_index])
+            new_messages = [messages[0], {"role": "system", "content": summary}] + messages[safe_index:]
+            return CompactResult(messages=new_messages, compacted=True, dropped_count=safe_index - 1, kept_count=len(new_messages) - 2, summary=summary)
+        

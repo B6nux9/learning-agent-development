@@ -10,7 +10,7 @@
 - 路径：**分级(tiered)**
 - 目标终点等级：**Advanced（第 4 级）** —— 能独立设计并搭出 production 级客服 agent，
   懂每个组件的权衡，在面试里讲透细节。不追 Expert。
-- 起始日期 / 最近更新：2026-07-13 / 2026-07-22（L6 进行中，跨机器交接）
+- 起始日期 / 最近更新：2026-07-13 / 2026-07-25（L6 封版）
 - 默认模型：**DeepSeek**（`deepseek-chat`，OpenAI 兼容，写法可迁移通义千问/GPT）
 - 环境：conda 环境 `agent`，Python 3.12
 - 仓库（**用户在两台机器上学，按当前系统判断路径**）：
@@ -41,36 +41,20 @@
 > 求职定位：**社招**，1-3 个月投一轮，不排除长期作战。JD 原文存在 `Requirements/`。
 
 ### 🔵 阶段二：核心能力补齐（投递前必做）
-- [~] **L6 上下文管理 + Prompt/Context Engineering** —— **进行中**　← **当前断点**
-  - ✅ **讲授完成**（notes.md 完整）：上半场上下文管理（平方级增长、lost in the middle、
-    上下文=预算表、四类策略）；下半场 Prompt Engineering（五块骨架、别用模糊限定词、
-    点名禁掉失败模式）+ **结构化输出三层次**（补缺口 2 已完成）。
-    模型选型 reference 已带他过了一遍。
-  - ✅ **quiz 完成**（6 题）：Q2/Q3/Q5/Q6 满分；**Q1 补讲**了"单次线性 vs 累计平方"的区分；
-    **Q4 让他重写了 prompt**，他第二版仍有两处问题（把 JSON 输出格式套到所有场景——
-    违背了他自己刚答对的"给人看就用普通文本"；漏了负面约束），已给参考版本对照。
-  - ⏳ **作业进行中** —— 见下方「L6 作业当前状态」
+- [x] **L6 上下文管理 + Prompt/Context Engineering** —— 已完成，达标（quiz 6 题过；
+  作业 `homework/v2/` 端到端跑通：阈值触发压缩、13 单测通过、真实会话验证跨压缩记住用户名）
+  - 讲授：平方级增长、lost in the middle、上下文=预算表、四类策略；Prompt 五块骨架 +
+    别用模糊限定词 + 点名禁失败模式；结构化输出三层次（补缺口 2）。
+  - **两个尾巴并入阶段二 capstone**（见「阶段二 capstone 待办」）：
+    ① Part B 结构化输出路由（缺口 2 的动手部分，只讲了没写）
+    ② 单元测试系统学习（v2 测试由教练代写，用户当时选择先专注实现）
 
-### ⚠️ L6 作业当前状态（跨机器接力要点）
-`lesson-06/homework/` 下有**两套**，别搞混：
-1. **`context_manager.py`（v1）—— 已废弃为「参考实现」，不要再让他做。**
-   他做过一轮，撞了三个坑（都已讲透并修好，代码里有 `【改】` 注释）：
-   ①混血列表 `AttributeError`（第 3 次犯）→ **根治法：在 `run_agent` 入口用
-   `msg.model_dump(exclude_none=True)` 归一化**，下游全部免疫。金句已入 interview-notes：
-   "同一个 bug 在多处重复出现，说明抽象层漏了——应在数据入口统一格式，而非每个使用点做防御"。
-   ②切点逻辑方向反了（危险的是 **tool** 落在切点上，不是 assistant）。
-   ③摘要 prompt 用了"不要丢失**重要**信息"这种模糊词。
-   后又按他要求把 token 估算**升级成 `response.usage.prompt_tokens`**（见下方"生产规范"）。
-2. **`v2/`（当前作业，他明天要做的）** —— 三文件分层：
-   - `v2/context.py`：**纯逻辑**模块，TODO 1 `find_safe_cut_index`（纯函数）、
-     TODO 2 `ContextManager`（三策略 + fail-fast 参数校验 + 不修改入参）
-   - `v2/test_context.py`：**本次新肌肉 = 单元测试**。已给 5 个样板，
-     TODO 3/4 各补 4 个。核心教学点：**依赖注入**（注入 fake_summarizer 使测试
-     快/稳/免费/能测异常路径）、`exploding_summarizer` 测"某函数没被调用"的套路。
-   - `v2/agent.py`：接线层（碰 LLM/网络），**已写好**，他只需读懂分层。
-   - 跑测试：`pip install pytest` → `cd lesson-06/homework/v2 && pytest test_context.py -v`
-     （**他机器上还没装 pytest**；文件底部有免 pytest 的自跑入口，但 `pytest.raises` 那题需要）
-   - 对应 JD：蔚蓝"建立 Agent 任务的**评估与回归测试体系**"。
+#### L6 作业最终状态（已封版）
+`lesson-06/homework/` 下两套：
+- `context_manager.py`（v1）= 参考实现，带 `【改】` 注释记录踩坑，**勿再让他做**。
+- `v2/`（正式作业，已完成）三文件分层：`context.py`（纯逻辑，用户实现）、
+  `test_context.py`（单测，教练代写，13 通过）、`agent.py`（接线层）。
+  端到端验证过程见 `lesson-06/summary.md` 第五节（9 条实战道理，全部已进 interview-notes）。
 
 ### 🔴 教学标准变更（2026-07-22 用户明确要求，最高优先级）
 > **"在后面的课程学习中，尽量保持生产环境的规范。estimate 还是有点太简单了，
@@ -89,6 +73,11 @@
 - [ ] **L9 主流框架：用 LangChain 重写项目** ——（JD 6/10，**从 L14 大幅前移**；简历关键词）
 - [ ] **L10 MCP 协议** ——（JD 4/10，**新增**；2025-26 热点，面试常问）
 - [ ] 🎯 **阶段二 capstone：简历级客服 Agent 项目**（最重要产出，直接写进简历）
+      **capstone 待办（含 L5/L6 遗留）**：
+      - remember(L5) + 上下文压缩(L6) + RAG(L7) 三者合成完整客服 agent
+      - **L6 Part B：结构化输出路由**（用 `response_format` json_schema 重写 L4 的 route_llm，
+        缺口 2 的动手部分，只讲了没写）
+      - **单元测试系统学习**（L6 的 v2 测试是教练代写的，capstone 里让他自己写）
 
 ### 🟢 阶段三：工程化与求职冲刺（投递前做完）
 - [ ] **L11 Multi-Agent 多智能体协作** ——（JD 5/10，**从 L13 前移**；是 L4 编排的自然延伸）
@@ -109,9 +98,12 @@
   按每周 5-10 小时 → **5-10 周**，落在 1-3 个月窗口内，可行但要保持节奏。
 
 ## 当前掌握等级评估
-**已迈入 Intermediate 门槛**（阶段一收官）。除 L2/L3 能力外，L4 独立完成阶段一 capstone：能做
-分组路由（代码编排）、会话内多轮记忆、LLM-as-router，并抓住「**能力来自工具、可靠性来自约束**」。
-主动推导出 **记忆（L5）、上下文（L6）** 两个后续核心问题——超出 Beginner 深度。
+**Intermediate 稳步推进（阶段二进行中，已完成 L5/L6）**。除阶段一能力外，已掌握长期记忆存取闭环、
+上下文压缩（阈值触发/混合策略/切点安全）、Prompt 工程、结构化输出，并能把逻辑拆成**可测的纯模块**。
+**L6 亮点：几乎全程自驱 debug**——阈值 thrashing、反复摘要衰减、模型可用性、`-`vs`_` 一字之差，
+都是他跑出来撞明白的。**工程判断力明显上台阶**（会追问"生产环境怎么做"、主动要求对齐生产规范）。
+**仍需盯的短板**：多部分任务只做一半（L3 漏兜底 return、L5 漏空分支、L6 __init__ 校验了没存值——
+**同一模式第 3~4 次**，已反复叮嘱"看到 TODO 里有'并/、'连接的多动作，做完数一遍"）。
 **本节高光：一次真实 debug 全程自驱**——LLM 路由静默失灵→加 `repr` debug print→看到 `content=''`
 →定位到「思考型模型 `deepseek-v4-flash` 被 `max_tokens=5` 饿死」→换非思考模型 `deepseek-chat` 修复。
 工程 debug 直觉明显在长。
@@ -153,10 +145,22 @@
      `remember` 从未被调用。靠 ①查物证(文件) ②打印真实 `tool_calls` 才发现。
      治本=**prompt 太软**，改强命令并点名禁掉偷懒话术("绝对不要只嘴上说'已记住'却不调用工具")。
      → **金句：验收 agent 永远看动作(tool_calls)，不看话术。** L11 可观测性回扣。
-- **Windows 环境变量（本节踩坑，已解决）**：永久设 key 用
+- **Windows 环境变量（L5 踩坑，已解决）**：永久设 key 用
   `[Environment]::SetEnvironmentVariable("DEEPSEEK_API_KEY","sk-...","User")`；
   **关键坑：VSCode 启动时就把环境变量拍了快照**，改注册表后新开终端标签也读不到，**必须完全重启 VSCode**。
   临时救急：`$env:DEEPSEEK_API_KEY = [Environment]::GetEnvironmentVariable("DEEPSEEK_API_KEY","User")`。
+- **L6 已扎实、可略过**：上下文平方级增长、lost in the middle、上下文=预算表、四类压缩策略、
+  阈值触发惰性优化、Prompt 五块骨架、结构化输出三层次、FunctionCalling=结构化输出、
+  纯逻辑/副作用分离 + 依赖注入使代码可测。详见 `lesson-06/summary.md`。
+- **L6 关键事实（后续会用）**：
+  - **本端点可用模型只有 `deepseek-v4-pro` / `deepseek-v4-flash`**，**无 `deepseek-chat`**！
+    （我曾误建议 deepseek-chat 导致 400。模型名以端点为准，`client.models.list()` 可查。）
+  - 摘要器这类"低频但质量关键"的活可用 `deepseek-v4-pro`；主对话/路由用 `deepseek-v4-flash`。
+  - `msg.model_dump(exclude_none=True)` 在入口把 SDK 对象归一化成 dict，根治混血列表。
+  - 压缩切点：危险的是 **tool** 落在切点上（父 assistant 被切走→孤儿），用 while 退过连续 tool。
+  - 压缩阈值必须 > "压缩地板价"，否则每轮都压(thrashing)→ 反复摘要衰减信息（名字会丢）。
+- **L6 遗留（并入阶段二 capstone）**：① Part B 结构化输出路由（只讲没写）② 单元测试系统学习
+  （v2 测试是教练代写的）。**别忘。**
 - **流程改进（本次确立，已存记忆 material-creation-timing）**：三份材料分时创建——notes 讲授时就建、
   quiz 出题时就建、**只有 summary.pdf 等封版才生成**。以后每节照此，别再堆到封版一起做。
 - **PDF 生成方式**：
@@ -169,16 +173,13 @@
   `E:\Agent`；GitHub 账号从误用的 el4435 改为指定的 **B6nux9**（el4435 上的旧副本待用户手动删）。
 
 ## 下一步（给下个 session 的明确指令）
-- **⚠️ 先读上面「L6 作业当前状态」和「教学标准变更」两节。** L6 讲授和 quiz 都已完成，
-  **不要重讲**，直接接作业。
-- **立刻要做**：确认他 `v2/` 作业的进度（是否已实现 TODO 1-4、pytest 装了没）。
-  他在 Windows 上还没装 pytest；换到 macOS 后可能也要先 `pip install pytest`。
-  卡住就按老规矩：**给提示不给答案**，让他先跑先撞，撞了再一起看真实值/物证。
-- **L6 封版流程**（作业跑通后）：出 summary.md + PDF → 更新 PROGRESS → 补 `interview-notes.md`
-  （L6 素材：平方级增长、lost in the middle、依赖注入使 agent 可测、入口归一化根治混血列表、
-  usage 而非自估 token）→ commit + push。
-- **L6 里还没做的**：v1 的 **Part B「结构化输出路由」还空着**。可在 v2 作业完成后作为收尾小练习，
-  或并入阶段二 capstone。**别忘了它——那是补缺口 2 的动手部分。**
+- **立刻要做**：**什么都不要做，等用户说"开始 L7 / 继续"**。L6 已封版，主动权在用户手里。
+- 用户开口后教 **L7 RAG 与向量数据库**（**JD 8/10，第二高频，重中之重，面试必问**）。
+  回扣点：①L5 的"外置"策略 + L6 的"外置=不放上下文、要时检索"正是 RAG；②学习者从 task A 就自问
+  "客户问题是否需要模糊处理"、L3 结尾自己想到"按需检索工具"——都在 L7 兑现，开课时点回去。
+  L7 大概率要装向量库（如 chroma/faiss）+ embedding，**注意生产规范 + 环境管理**（他的老短板）。
+- **保持生产规范**（用户硬要求，见「教学标准变更」）：默认生产级写法，简化必说明差距。
+- **每节顺带**：讲到 JD 高频点就标"X/10 的 JD 要求"；踩坑与权衡随手记进 `interview-notes.md`。
 - **macOS 上的 PDF 生成方式**与 Windows 不同，见下方「PDF 生成方式」一节。
 - **仓库里新增的两份长期维护文件（每节课封版时一并更新）**：
   - [`interview-notes.md`](interview-notes.md) —— **面试素材本**，按"面试官会怎么问"组织，

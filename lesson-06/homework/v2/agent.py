@@ -22,10 +22,10 @@ from context import ContextManager
 
 client = OpenAI(api_key=os.environ["DEEPSEEK_API_KEY"], base_url="https://api.deepseek.com")
 
-MODEL = "deepseek-chat"
-CHEAP_MODEL = "deepseek-chat"     # 摘要这种小活用便宜/快的模型(L4 的教训)
+MODEL = "deepseek-v4-flash"
+CHEAP_MODEL = "deepseek-v4-flash"     # 摘要这种小活用便宜/快的模型(L4 的教训)
 MAX_TURNS = 8
-COMPACT_THRESHOLD = 1500          # 用 API 实测 prompt_tokens 判断
+COMPACT_THRESHOLD = 1200         # 用 API 实测 prompt_tokens 判断
 KEEP_RECENT = 6
 
 
@@ -175,6 +175,7 @@ def main():
         if result.compacted:
             print(f"[ctx] 已压缩:{result.dropped_count} 条旧消息 -> 摘要,"
                   f"保留 {result.kept_count} 条原文")
+            print(f"[ctx] 摘要内容 >>> {result.summary!r}")
 
         print(f"客服助手: {run_agent(messages)}")
         print(f"[ctx] 本轮实测输入 {stats.last_prompt_tokens} tokens | {stats.summary()}")
