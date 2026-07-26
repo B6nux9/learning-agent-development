@@ -1,0 +1,222 @@
+# 课程说明：Agent 开发（面向国内社招求职）· v3 两轨版
+
+> 用途：课程的稳定版说明，供在外部工具里优化课程时作输入，也便于优化后 diff。
+> 权威进度以 `PROGRESS.md` 为准；本文件是面向"优化课程设计"的高层概述。
+> **v3 变更**（基于 GPT-5.6 评审合并，标记 🆕v3；v2 的源码锚点机制保留，标记 🆕）：
+> ① 课程拆为 Core / Advanced 两轨，Core 完成即开始投递；② 测试/评估/追踪/安全从"期末课"
+> 改为垂直要求，最小版本前移；③ 新增客服域专项检查表（对冲锚点全是 coding agent 的偏科）；
+> ④ 工程封版条件（替代独立 L0）；⑤ capstone 量化验收；⑥ 四处表述修正（MCP/去plan化/
+> 30%/benchmark 记法）。原 §三教学方法 7 条一字未动。
+> **合并原则：收结构、砍体积。所有新增内容分两档：【必做】进作业；【谈资】只进
+> interview-notes.md，不写代码。防止课程膨胀到 5-10h/周装不下。**
+
+## 一、主题与目标
+从零到能独立设计、搭建 **production 级客服 Agent**。终点定在五级体系第 4 级 **Advanced**：
+懂每个组件的权衡取舍，面试能讲透细节，能处理非标准情况、能做设计决策。不追第 5 级 Expert。
+
+🆕 每个核心组件，学习者都见过至少一份生产级开源实现，面试可引用具体项目的具体设计。
+🆕v3 终点画像（面试自述的目标状态）：
+"我理解 loop、tool、状态、上下文、RAG、路由、框架、MCP、评估、tracing、安全和部署。
+我独立构建并评估了一个客服 Agent，测试过异常场景，能解释每项架构决策的取舍。"
+
+## 二、学习者画像
+- 基础：会写 Python、调过大模型 API、懂 LLM 原理；**工程基本功偏弱**（环境管理、代码完整性）。
+- 动机：**国内社招求职**唯一目标，1-3 个月投一轮，不排除长期作战。重视"简历能写、面试能讲透"。
+- 时间：每周 5-10 小时。
+- 偏好：**边做边学、不看答案、用填空骨架自己补核心逻辑（coaching 式，给提示不给答案）**。
+
+## 三、教学方法（核心，勿改）
+1. 二八原则：先攻覆盖 80% 场景的 20% 核心。
+2. coaching 式：作业给填空骨架，撞坑后"看真实值、找物证"debug——**翻车是核心教学资源**。
+3. 每节固定节奏：讲授 → quiz → 作业 → 确认封版 → PDF 总结 → commit 留痕。
+4. 节奏归学习者：一节收尾即停，不抢跑，等他说"开始下一课"。
+5. **生产级规范（学习者硬性要求）**：不教玩具实现；确需简化必说明"生产怎么做、差距在哪"。
+6. 求职嵌入：讲到 JD 高频点标注"X/10 的 JD 要求"；踩坑沉淀进 `interview-notes.md`。
+7. JD 反向优化：大纲按 11 份目标岗位 JD 需求频次重排（社招为主，大厂校招 JD 作参考系）。
+
+## 🆕 三·补一、源码锚点机制（v2 引入，v3 保留）
+每节课在"作业"与"封版"之间插入**锚点环节**：
+- 有界：单节 ≤90 分钟，指定到仓库具体包/模块；带 2-3 个引导问题，只为答题而读。
+- 产出三栏对比笔记 `anchor-notes/LXX-<项目>.md`：①它怎么做 ②我怎么做 ③差异原因。
+  第③栏摘录进 `interview-notes.md`。
+- 锚点不写代码（标 🔧 除外）；pi（TypeScript）一律只读；可顺延不可跳过，封版前必补。
+- 仓库浅克隆到 `reference/repos/`（不入 git）。
+
+**锚点项目池**：smolagents（最小 loop / CodeAgent / PR 候选）· pi（harness 解剖标本，只读）·
+OpenAI Agents SDK（handoff/guardrail/session/tracing 标准参照）· OpenHands（生产架构 /
+评估 / 沙箱，PR 首选）· Claude Code（产品化对照，日常在用）· 🆕v3 Rasa（可选，仅客服域
+状态机/forms 设计参考，45 分钟封顶）。
+
+## 🆕v3 三·补二、工程封版条件（替代独立 L0 课，即刻生效）
+不新开工程课（进度已在 L7，回头补课打断节奏），改为**每节封版的三条硬条件**：
+1. **环境可复现**：作业目录能在另一台机器上按 README 一次跑通（conda env + requirements 锁定
+   + key 从环境变量读取）。两台机器接力的现状正好是天然验收场。
+2. **测试通过**：本节作业至少 1 个正常路径 + 1 个失败路径的 pytest 用例，`pytest` 绿。
+3. **无调试残留**：commit 前无 print 残留（用 logging）、无注释掉的死代码、无硬编码 key。
+三条不满足不封版。这三条同时是对短板 1（任务做一半）的持续训练——完形不是靠自觉，靠门禁。
+（HTTP/异步/SQL/Docker 等大项不单独开课，在用到它们的课内【必做】最小子集，其余【谈资】。）
+
+## 四、掌握等级（学习者当前在第 3 级，目标第 4 级）
+1 Layman → 2 Beginner → **3 Intermediate（当前）** → **4 Advanced（终点）** → 5 Expert（不追）
+
+## 🆕v3 五、大纲与进度（两轨制）
+
+> **Core Track = 求职门槛，完成即开始投递，不等全部学完。**
+> **Advanced Track = 边投递边学，面试反馈反哺学习重点。**
+> 时间账（GPT-5.6 核算采纳）：12 周 × 5-10h = 60-120h。Core 含 5 个锚点（≤7.5h）+
+> L7 收尾 + S1 + L8-L10 + capstone + 最小部署 ≈ 55-75h → 每周 5h 走 14-15 周，
+> 每周 8-10h 走 9-11 周。**若第 8 周 Core 未过半，砍 L10 锚点和 Rasa，保 capstone。**
+
+### ✅ 已完成（阶段一 + L5/L6）
+L1 什么是 agent · L2 手写 loop · L3 tool use · L4 多工具编排 + capstone ·
+L5 记忆与状态 · L6 上下文管理 + Prompt/结构化输出
+（回填锚点合并进 S1，勿逐课回补）
+
+---
+### 🎯 Core Track（当前轨道）
+
+- 🔶 **L7 RAG 与向量数据库（进行中：讲授完成，quiz/作业未做）** JD 8/10 最高频
+  - 🆕v3 作业扩充【必做】：
+    a) **评估集先行**：15-20 条用例（含预期来源文档、预期答案要点、**无法回答的问题**、
+       越权问题），作业跑分，这份评估集一直用到 capstone 和 L12；
+    b) **回答带来源引用**；c) **证据不足时拒答**而非硬编。
+  - 🆕v3【谈资】：hybrid search（BM25+dense）、rerank、query 改写、多租户隔离、
+    embedding 版本迁移——interview-notes 各一句"是什么、什么时候需要"，不实现。
+  - 🆕 锚点：pi 的 Dynamic context 扩展机制（每轮前注入消息/过滤历史/实现 RAG）。
+    引导问题：① 检索结果注入 system、user 还是独立消息，后果差异？
+    ② embedding 与生成解耦（你在用：OpenAI embedding + DeepSeek 生成），pi-ai 的
+    多 provider 抽象怎么让混搭成为默认能力？
+
+- 🆕 **专题 S1：harness 解剖（L7 封版后，约一周）**
+  - 材料：Mario Zechner 复盘文章（mariozechner.at, 2025-11-30）+ pi 三个核心包。
+  - 任务：画 pi 架构图，标四层：统一 LLM API（pi-ai）→ agent loop（pi-agent-core）→
+    界面（pi-tui/CLI）→ 扩展机制。
+  - 引导问题：
+    ① pi 只给 read/write/edit/bash 四工具就能打 Terminal-Bench，你 L4 capstone 几个工具？
+      "工具多"和"工具强"哪个重要？
+    ② pi 不做 MCP/sub-agents/plan mode/权限弹窗，作者理由是什么？你同意哪几条？
+    ③ 🆕v3（表述修正）：作者观察"前沿模型不需要万 token 系统提示词"——**当假设不当结论**。
+      coding model 可能从训练中见过 harness 行为，但客服 agent 必须显式给出业务规则/
+      工具约束/转人工条件/禁止事项。→ 布置对照实验（在 capstone 阶段执行）：
+      长 prompt vs 精简 vs 精简+tool schema vs 精简+外部 policy 检查，
+      用 L7 评估集比较成功率/违规率/token/延迟。
+    ④ 你 L2 手写 loop 与 pi-agent-core 逐环节对齐：任务接入/上下文/工具执行/循环控制，
+      缺哪几环？（常见答案：流式事件、工具校验、错误反馈回注入）
+  - 产出：`anchor-notes/S1-pi.md` + 架构图（面试"讲架构"底稿）。
+
+- ⬜ **L8 路由 / ReAct / Planning**
+  - 🆕 锚点：smolagents CodeAgent（core 约千行）。
+    引导问题：① "想→动→看"在 JSON tool-calling 和代码即动作两种范式下各长什么样？
+    ② 🆕v3（表述修正）：代码即动作**在受益于循环与组合的任务上**可减少工具调用轮次
+      （幅度依工作负载与模型而定，不写定值），代价是什么（沙箱/安全面/小模型崩坏）？
+    ③ 🆕v3（表述修正，改为条件问题）：**什么条件下显式规划有帮助？什么条件下它产生
+      过时计划和多余延迟？** 为什么 pi/Claude Code 不内置 planner，而客服 agent
+      常要显式路由？（场景差异：自主长执行 vs 短对话+合规）
+
+- ⬜ **L9 框架对比（原"LangChain 重写"，🆕v3 改法采纳 GPT-5.6）**
+  - 作业改为：**同一个有界工作流**（从 capstone 里切一条，如"查订单→判断→退款/转人工"）
+    分别用裸 SDK 和 LangGraph 实现，对比：编排代码行数/状态表示/持久化/错误恢复/
+    human-in-the-loop/可调试性/测试性/框架耦合。
+  - 产出：一份 ADR，回答"什么情况选 LangGraph，什么情况保持裸 loop"。
+  - 生态位讲清（2026 现状）：LangGraph 负责状态图+持久化+HITL checkpoint；AutoGen 已
+    维护模式（社区 fork AG2）。面试答"为什么用/不用 LangChain"从此有据。
+  - 🆕 锚点：LangGraph checkpoint/持久化模块（对照 L5 手写记忆）。
+    引导问题：持久化粒度是消息级还是图节点级？崩溃恢复语义差异？
+
+- ⬜ **L10 MCP 与工具集成边界**
+  - 🆕v3（表述修正，采纳 GPT-5.6）：MCP 标准化的是**工具/资源/prompt 的发现、client-server
+    通信、工具 I/O 协议、host 连接外部能力的方式**；MCP 本身**不解决**用户认证、工具授权、
+    最小权限、沙箱、数据外泄、prompt 注入、审计——这些归 Host + Server + 业务系统。
+  - 核心面试问题改为："**MCP 标准化了什么？哪些安全问题仍必须由 Host/Server/业务系统负责？**"
+  - 🆕 锚点（两边各 ≤45 分钟）：a) OpenAI Agents SDK 的 MCP 支持实现；
+    b) pi 作者反对内置 MCP 的理由（用 extension 替代）。什么规模下 MCP 是过度设计？
+
+- 🎯 **Core capstone：简历级客服 Agent（阶段二 capstone 升级版）+ 最小部署**
+  - 功能主线不变：remember + 压缩 + RAG + 路由 + 单元测试合体。
+  - 🆕v3 **客服域专项检查表【必做】**（对冲锚点偏科，这是 coding agent 项目里学不到的）：
+    □ 高风险操作（退款/改单）执行前要求用户确认
+    □ 写操作幂等（同一退款请求执行两次只生效一次——幂等键）
+    □ 转人工条件明确且可触发
+    □ 用户身份/权限检查（A 用户查不到 B 的订单）
+    □ PII 最小化：日志与 trace 中脱敏
+    □ 操作审计日志（谁在哪轮触发了什么工具）
+    □ 无法回答/证据不足 → 拒答或转人工，不硬编
+    🆕v3【谈资】：SLA/延迟目标、多语言、对抗性用户处理策略——interview-notes 各一段。
+  - 🆕v3 **可靠性最小集【必做】**（从原 L13/L14 前移的最小版）：
+    所有外部调用有 timeout；重试有上限+指数退避；loop 有终止条件（防连环工具调用死循环）；
+    每请求 trace ID + 每轮一行 JSON（token/耗时/工具链）；health check 端点。
+  - 🆕v3 **最小部署【必做】**：FastAPI + 单 Docker 容器 + README 一键起。流式(SSE)、
+    限流、熔断、后台队列等 →【谈资】："当模型超时但工具已成功/同请求提交两次/向量库
+    不可用/流式中断时会发生什么"——四问必须能口头讲清，不必全实现。
+  - 验收含《架构决策记录》：至少 3 条决策引用锚点项目对照 + prompt 对照实验结果（S1③）。
+  - ✅ **capstone 封版 = 开始投递。不等 Advanced Track。**
+
+---
+### 🟢 Advanced Track（边投递边学，顺序可按面试反馈调整）
+
+- ⬜ **L11 Multi-Agent（🆕v3 定位：有充分理由才用）**
+  - 先答杀手问题："**为什么这不能是一个 agent 带三个工具？**"答不出就不该用多 agent。
+    正当理由清单：权限边界不同/上下文需求独立/专家 prompt/可并行/团队分属。
+  - 🆕 锚点：OpenAI Agents SDK handoffs + guardrails 源码。
+    ① handoff 交接时上下文传什么、传多少、谁决定？② manager 式 vs handoff 式各适合
+    什么拓扑？③ guardrail 输入侧/输出侧各拦什么？
+  - 对照：OpenHands delegation（粗读 30 分钟封顶）。
+
+- ⬜ **L12 评估（进阶）**——L7 评估集已建，本课升级：LLM-as-judge 的坑、在线评估、
+  回归集维护（历史 bug 进回归）。
+  - 🆕 锚点：OpenHands evaluation harness。🆕v3（记法修正）：benchmark 数字一律带
+    "截至日期+配置"，如"截至 2026-07，OpenHands CodeAct v3 + Claude Opus 4.6 在
+    SWE-bench Verified 报告 68.4%"——课程关注 harness 设计，不关注排行榜绝对名次。
+    引导问题：benchmark 分数和"客服 agent 好不好"之间隔着什么？
+
+- ⬜ **L13 可观测性/成本/延迟（进阶）**——capstone 已有最小 trace，本课升级为
+  span 结构/仪表盘/在线监控/成本归因。
+  - 🆕 锚点 🔧：pi-ai 的 token/成本追踪 + OpenAI Agents SDK tracing。
+    span 切在什么粒度——轮次、工具调用、还是 LLM 请求？
+
+- ⬜ **L14 服务化与安全（进阶）**——capstone 已最小部署，本课升级：认证授权、
+  secrets 管理、限流熔断、负载测试、优雅降级、回滚。
+  - 🆕 锚点：OpenHands Docker 沙箱设计 + smolagents 沙箱选项（E2B/Docker/本地）。
+    客服 agent 不执行任意代码，它的安全面在哪（prompt 注入/工具越权/数据外带）？
+  - 含 prompt 注入测试：把注入用例加进 L7 评估集的对抗性分区。
+
+- 🎯 **PR 支线（可选，等价第二 capstone，2-3 周，与 L11-L14 串行不并行）**
+  - 目标：smolagents 或 OpenHands（Python）；pi 不作 PR 目标（TS 成本高，只读）。
+  - 流程：认领 issue（good first issue 起步）→ fork → 修 → **带测试** → PR → review 往返。
+  - 🆕v3（表述修正，采纳 GPT-5.6）：简历写法必须如实——写清解决了什么问题、PR 当前状态
+    （open/merged/closed）、加了什么测试、review 收到什么反馈、附链接。
+    **未合并不得写成 merged contribution**。高质量未合并 PR（有测试、有维护者 review）
+    仍有面试价值；纯文档/无人 review 的 PR 价值有限，不凑数。
+
+### ⚪ 长期作战
+高并发深化 · 模型微调 · 多模态 · 推理优化 · 沙箱安全 · 开源贡献常态化（每季度 1 个 PR）
+
+## 六、技术环境
+- **对话模型**：DeepSeek 系。**当前端点仅 `deepseek-v4-pro` / `deepseek-v4-flash`**（无 deepseek-chat）；
+  OpenAI 兼容接口，写法可迁移。key：`DEEPSEEK_API_KEY`。
+- **OpenAI（可选）**：DeepSeek 端点**没有 embedding 接口**，
+  故 **L7 RAG 的 embedding 用 OpenAI `text-embedding-3-small`**；也可整体切到 OpenAI（`gpt-4o-mini` 等）。
+  key：`OPENAI_API_KEY`。**embedding 与生成解耦，可用不同厂商——这是地道的生产模式。**
+- Python 3.12，conda 环境 `agent`；两台机器（macOS `/Users/el4435/...` + Windows `E:\Agent\...`）共用远端仓库 B6nux9 接力。
+- 留痕：本地 git，每节 `lesson-XX/{notes,quiz,summary.pdf,homework}`；跨 session 交接靠 `PROGRESS.md`。
+- 🆕 锚点仓库：`reference/repos/` 浅克隆 smolagents、openai-agents-python、OpenHands、pi-mono
+  （🆕v3 可选 +rasa）；目录入 `.gitignore`。pi 复盘文章存 PDF 到 `reference/` 防失效。
+
+## 七、学习者短板（优化时重点关注）
+1. **多部分任务只做一半**（头号，出现 4 次）：漏兜底 return、校验了没存值、改一半。
+2. 混血 messages 列表（dict + SDK 对象）。
+3. 调试残留忘清理。
+4. 环境管理（哪个 python / key 在不在 / VSCode 环境快照坑）。
+
+🆕v3 治理机制升级：短板 1/3/4 由**工程封版条件**（§三·补二）门禁化——每节课强制完形，
+不再依赖提醒；短板 2 在 L9 框架对比中专项覆盖（状态表示一栏）。
+
+## 八、产出物
+- 每节：`lesson-XX/{notes.md, quiz.md, summary.pdf, homework/}`
+- 🆕 每节：`anchor-notes/LXX-<项目名>.md`（三栏对比笔记）
+- 全局：`PROGRESS.md`、`interview-notes.md`、`reference/模型选型.md`、`Requirements/`（11 份 JD）、
+  本文件
+- 🆕 `anchor-notes/S1-pi.md` + pi 架构图
+- 🆕v3 `eval/`（L7 起的评估集，含无法回答/越权/对抗分区，一直养到 L12）
+- 🆕v3 capstone 附件：《架构决策记录》（含 L9 的框架 ADR + prompt 对照实验结果）·
+  客服域检查表勾验单 · 部署 README

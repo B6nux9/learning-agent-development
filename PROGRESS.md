@@ -174,11 +174,57 @@
 - **途中的决定/调整**：模型定 DeepSeek（国内求职）；工作路径与仓库从 `E:\CAS\展望` 迁到
   `E:\Agent`；GitHub 账号从误用的 el4435 改为指定的 **B6nux9**（el4435 上的旧副本待用户手动删）。
 
+## ⚠️ 课程大纲已升级到 v3（2026-07-26，务必先读）
+**权威大纲 = [`COURSE-OVERVIEW-v3.md`](COURSE-OVERVIEW-v3.md)**（两轨版，用户自己评审合并的）。
+下面这份 PROGRESS 的大纲章节是 v2 时期的，**遇冲突以 v3 为准**。v3 核心变更：
+1. **两轨制**：Core Track（L7→S1→L8→L9→L10→capstone+最小部署）**封版即开始投递**；
+   Advanced Track（L11-L14 + PR 支线）边投边学。
+2. **工程封版三条门禁**（替代独立工程课，每节强制）：①环境可复现 ②本节作业至少 1 正 1 反
+   pytest 用例且绿 ③无调试残留（无 print 残留/死代码/硬编码 key）。**三条不满足不封版。**
+3. **[必做] 进作业 / [谈资] 只进 interview-notes**——防课程膨胀，严格执行。
+4. **源码锚点机制**：每节在作业与封版之间插 ≤90min 锚点，产出 `anchor-notes/LXX-<项目>.md`
+   三栏笔记（它怎么做/我怎么做/差异原因）。锚点池：smolagents、pi(只读)、OpenAI Agents SDK、
+   OpenHands、Claude Code。
+5. 客服域专项检查表 + 可靠性最小集 + 最小部署 → 都在 Core capstone。
+
+### 🔑 用户已拍板的三条执行决策（2026-07-26）
+- **时间**：能稳定 **8h/周** → Core 约 9-11 周，装得进 1-3 个月投递窗口。
+- **测试时序**：v3 门禁要求写 pytest，但用户系统学测试排在 capstone。
+  → **门禁期由教练搭测试脚手架**（给测试骨架/样板），他补断言；capstone 再系统自己写。
+- **评估集**：**已按 v3 补建完成**（见下）。
+
+### 📌 教练对 v3 的两点保留（已告知用户，S1 那条用户未明确回应）
+- **S1 解剖 pi 建议降级**：TS 语言、大型陌生库、不能写进简历，Core 里 ROI 最低。
+  已按"**读复盘文章 + 教练带过一遍架构图，约 60-90 分钟，不逐包啃 TS 源码**"处理，
+  而非原定的一整周。**用户若坚持深挖，开 L8 前会说。**
+- **锚点收紧**：只在高 ROI 处做（L8 smolagents、L9 LangGraph），Python 优先、
+  指定到具体文件/函数、≤90min。第一个锚点（L8 smolagents）做成模板。
+
+### ✅ L7 增补已完成：RAG 评估集（v3 要求，commit 0a712cd）
+- `eval/rag_eval_set.json`：18 条，四分区 normal(9)/unanswerable(4)/out_of_scope(2)/adversarial(3)，
+  带 `must_not_contain` 硬红线（防泄露 system prompt、防确认假前提、防越权执行）。
+- `eval/run_rag_eval.py`：分类打分卡 + **检索/答案两条正交指标** + 失败明细。
+  跑法：`uv run python eval/run_rag_eval.py`。**最终 18/18，检索 11/11。**
+- **过程中的高价值教训（已进 interview-notes）**：
+  ① 评估集抓到一次**真实回归**——改 prompt 修 a03 时，a02 从"正确纠正"退化成"拒答"；
+  ② **三次**撞上"子串匹配无法区分确认与否认"（"7 天"vs"7天"、"而非100天"、"并非秒到"）
+  → 这是 L12 上 LLM-as-judge 的依据；
+  ③ prompt 分支要按**主题**划而非按**具体说法**划（v1 三条规则边界打架 → v2 两条按主题，18/18）。
+- **这份评估集一直养到 capstone 和 L12**，每次改 RAG/prompt 都要跑全套回归。
+
 ## 下一步（给下个 session 的明确指令）
-- **立刻要做**：**什么都不要做，等用户说"开始 L8 / 继续"**。L7 已封版，主动权在用户手里。
-- 用户开口后教 **L8 任务规划：ReAct 与 Plan-and-Execute**（JD 6/10，新增）。**核心回扣**：
-  他 L2 手写的 agent loop **本质就是 ReAct**（Reason→Act→Observe 循环），L8 是给这个"涌现的循环"
-  一个名字 + 讲清 ReAct vs Plan-and-Execute 的区别与取舍。别让他觉得是全新东西——是给旧知识命名。
+- **开局顺序**：①`git pull` ②读本文件 ③**读 `COURSE-OVERVIEW-v3.md`**（权威大纲）
+  ④确认环境：`uv sync`（已迁 uv，见下）。
+- **立刻要做**：**什么都不要做，等用户说"开始 L8 / 继续"**。L7 + 评估集已封版，主动权在用户手里。
+- 用户开口后教 **L8 路由 / ReAct / Planning**（v3 命名，JD 6/10）。**核心回扣**：
+  他 L2 手写的 agent loop **本质就是 ReAct**（Reason→Act→Observe），L8 是给这个"涌现的循环"
+  正式命名 + 讲清 ReAct vs Plan-and-Execute 取舍。**别让他觉得是全新东西——是给旧知识命名。**
+  - v3 指定的锚点：**smolagents CodeAgent**（Python，≤90min，第一个锚点，做成模板）。
+    引导问题见 v3 §L8：①"想→动→看"在 JSON tool-calling vs 代码即动作两种范式下各长什么样？
+    ②代码即动作在受益于循环/组合的任务上减少轮次，代价是什么（沙箱/安全面/小模型崩坏）？
+    ③**什么条件下显式规划有帮助？什么条件下它产生过时计划和多余延迟？**
+    （为什么 pi/Claude Code 不内置 planner，而客服 agent 常要显式路由？）
+  - 封版走**三条门禁**（pytest 那条：教练搭脚手架）。
 - **⚠️ 环境已迁到 uv（L7 完成）**：跑代码用 `uv run python xxx.py`，装包用 `uv add X`，
   mac 端 `git pull` 后先 `uv sync` 复现环境。`.venv` 在仓库内、已 gitignore；pyproject/uv.lock 已入库。
   conda `agent` 环境暂留兜底。
