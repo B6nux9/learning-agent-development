@@ -71,7 +71,8 @@
 - [x] **L7 RAG 与向量数据库** —— 已完成，达标（quiz 3题过；作业 `rag.py` 端到端跑通：
   切块+OpenAI embedding+ChromaDB+grounding；口语/近义命中、库外问题 grounding 挡幻觉；
   **亲手验证 chunking 决定 RAG 上限**：固定窗口 vs 按标题切对比，检索与答案质量都上台阶）
-- [ ] **L8 任务规划：ReAct 与 Plan-and-Execute** —— **未开始**，等用户开口才教（勿抢跑）　← **当前断点**（JD 6/10，新增）
+- [~] **L8 路由 / ReAct / Planning** —— **进行中**（JD 6/10）　← **当前断点**
+      讲授 ✅ · quiz ✅ 达标 · 作业进行中（Part A 写了一半）。详见文末「L8 交接细节」。
 - [ ] **L9 主流框架：用 LangChain 重写项目** ——（JD 6/10，**从 L14 大幅前移**；简历关键词）
 - [ ] **L10 MCP 协议** ——（JD 4/10，**新增**；2025-26 热点，面试常问）
 - [ ] 🎯 **阶段二 capstone：简历级客服 Agent 项目**（最重要产出，直接写进简历）
@@ -212,11 +213,80 @@
   ③ prompt 分支要按**主题**划而非按**具体说法**划（v1 三条规则边界打架 → v2 两条按主题，18/18）。
 - **这份评估集一直养到 capstone 和 L12**，每次改 RAG/prompt 都要跑全套回归。
 
+## 🔶 L8 交接细节（2026-07-26 晚，用户明天换到 **macOS** 继续）
+
+> 状态：**讲授 ✅ · quiz ✅ 达标 · 作业 Part A 进行中。未封版。**
+> mac 上开工先 `git pull` 然后 `uv sync`。
+
+### 已产出
+- `lesson-08/notes.md` —— 讲义。**§0「最小记忆集」是后加的**：用户读完说"能理解但记不住"，
+  于是把全课压缩成**三个锚点**（①我的 L2 loop 就是 ReAct ②一条轴=重规划频率
+  ③自主性是成本不是收益），并演示"表格全部可现场推导"。**后续课程可复用这个手法。**
+- `lesson-08/quiz.md` —— 5 题，含参考答案待补（用户已答完，答案未写进文件）。
+- `lesson-08/homework/` —— 6 个文件，共 **25 个 TODO**（executor 7 / planner 5 /
+  test 10 / compare 3）。`README.md` 里有完整的门禁自检清单。
+
+### 作业进度（`lesson-08/homework/executor.py`）
+| TODO | 状态 |
+|---|---|
+| TODO-1 `LoopGuard.__init__` | ✅ 完成 |
+| TODO-2 `record_step` | ⚠️ **写了但有 bug，见下** |
+| TODO-3 `should_stop` | ❌ 未做 |
+| TODO-4 `_normalize` | ✅ 完成 |
+| TODO-5 `_execute_tool` | ✅ 完成（**经三轮 review**，已对齐参考实现） |
+| TODO-6 `run_react` | ❌ 未做（**这是最大的一块**） |
+| TODO-7 `_log_step` | ❌ 未做 |
+| `planner.py` / `test_executor.py` / `compare.py` | ❌ 全未开始 |
+
+### ⚠️ 已知 bug（**已告知用户，留给他自己修，别代劳**）
+`executor.py` `record_step` 里 `self.total_prompt_tokens += prompt_tokens`
+**漏了下划线**（应为 `self._total_prompt_tokens`）→ 撞上只读 property →
+`AttributeError: property 'total_prompt_tokens' has no setter`。
+同一个方法里 `self._steps += 1` 却写对了 —— **典型的"改一半/不一致"，头号短板第 6 次**。
+
+### 封版前还欠的（门禁三条）
+- 门禁 3：`_execute_tool` 下方**留着一大段注释掉的旧版死代码**，封版前必须删；
+  `ToolError` import 了但没用到。
+- 门禁 2：10 个测试断言全未补。
+- 还欠 `findings.md`（Part C 交付物）。
+
+### L8 教学过程中的高价值观察（写进最终 summary）
+- **quiz Q4 的盲区（本节最重要的教学发现）**：给他一段有问题的 loop 找 bug，他找出的
+  4 条全是**通用工程问题**（json.loads 在 try 外导致消息序列非法——这条相当漂亮，
+  比教练预设的还细；无步数上限；result 不保证是 str；上下文无限增长），
+  但**本节刚讲的 4 条一个没提**（stop_reason 枚举 / fatal 分流 / no-progress / print 残留）。
+  → 结论：**他的通用工程直觉在长，但"刚学的东西还没变成扫代码的检查清单"**。
+  后续出题可继续用这个手法验证。
+- **`_execute_tool` 三轮迭代是本节最好的一段教学**：v1 只写 2 条路径 → 指出
+  `ensure_ascii=False`、"error message 是给模型读的 prompt" → v2 写全 6 条但有
+  ① 成功路径 double encoding（`json.dumps` 一个已经是 JSON 的字符串）
+  ② `TransientError` 返回 fatal=False（方向反了）
+  ③ `TypeError`（模型把 order_id 写成 orderId，高频）能逃出去 → 违反"任何路径都返回字符串"
+  → **教练跑真实值给他看**（double encoding 的转义输出、TypeError 实际报错），
+  这个"看真实值"的手法他很吃 → v3 修好。
+- **用户主动要了一次参考实现**（"可以给一个正确的 _execute_tool 吗"）。判断：
+  他已自己写完 6 条路径 + 吃透 3 轮反馈，属于"做完对答案"而非"跳过思考"，故给了，
+  并附差异表 + 明说其中一处简化（`except (BusinessError, TypeError)` 把
+  "模型传错参数名" 和 "工具内部 bug" 混为一谈，生产应先用
+  `inspect.signature(fn).bind(**arguments)` 校验）。**这个尺度可沿用。**
+- 顺带补了两次 Python 基本功（**他的已知短板**）：光杆 `*`（强制关键字传参）/
+  `**kwargs` 收集 vs `{**d}` 展开 / `sorted(d)` == `sorted(d.keys())` +
+  `in d.keys()` 会被 ruff SIM118 flag。
+
+### 下一步（mac 上继续时）
+1. `git pull` → `uv sync` → 让他先修 `record_step` 那个 bug（**别代劳**）
+2. 继续 TODO-3 → TODO-6 → TODO-7，跑通 `uv run python lesson-08/homework/executor.py`
+3. 再做 planner.py → 补测试断言 → compare.py → findings.md
+4. 作业跑通后做**锚点 smolagents CodeAgent**（≤90min，v3 第一个锚点，做成模板）
+5. 走门禁三条封版 → 出 summary.pdf → 补 interview-notes → 更新本文件
+
+---
+
 ## 下一步（给下个 session 的明确指令）
-- **开局顺序**：①`git pull` ②读本文件 ③**读 `COURSE-OVERVIEW-v3.md`**（权威大纲）
-  ④确认环境：`uv sync`（已迁 uv，见下）。
-- **立刻要做**：**什么都不要做，等用户说"开始 L8 / 继续"**。L7 + 评估集已封版，主动权在用户手里。
-- 用户开口后教 **L8 路由 / ReAct / Planning**（v3 命名，JD 6/10）。**核心回扣**：
+- **开局顺序**：①`git pull` ②读本文件（**尤其上面的「L8 交接细节」**）
+  ③**读 `COURSE-OVERVIEW-v3.md`**（权威大纲）④确认环境：`uv sync`。
+- **立刻要做**：接上面「L8 交接细节 → 下一步」。**L8 未封版，作业进行中。**
+- L8 教学要点（已讲完，供 summary 与后续回扣用）：**L8 路由 / ReAct / Planning**（JD 6/10）。**核心回扣**：
   他 L2 手写的 agent loop **本质就是 ReAct**（Reason→Act→Observe），L8 是给这个"涌现的循环"
   正式命名 + 讲清 ReAct vs Plan-and-Execute 取舍。**别让他觉得是全新东西——是给旧知识命名。**
   - v3 指定的锚点：**smolagents CodeAgent**（Python，≤90min，第一个锚点，做成模板）。
