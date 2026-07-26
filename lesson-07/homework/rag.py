@@ -204,9 +204,10 @@ def rag_answer(question: str, retrieved_chunks: list[str]) -> str:
     """
     # 你的代码:
     system_prompt = (
-        "你是一个客服助手。请根据提供的资料回答用户的问题。"
-        "如果资料中没有相关信息，请回答'暂无相关信息,建议联系人工客服'。"
-        "请不要编造信息。"
+        "你是电商客服助手。严格只依据下面提供的【资料】回答,按【用户问的主题】判断:\n"
+        "1. 资料【涉及】该主题 → 依据资料如实、简洁回答;若用户的说法(天数/时效/政策)"
+        "与资料矛盾,也要【明确纠正】、给出资料里的正确信息,不要因为用户说错就回避或转人工。\n"
+        "2. 资料【完全不涉及】该主题 → 回答'暂无相关信息,建议联系人工客服',严禁编造。"
     )
     user_prompt = f"用户问题: {question}\n\n提供的资料:\n" + "\n".join(retrieved_chunks)
     response = gen_client.chat.completions.create(
