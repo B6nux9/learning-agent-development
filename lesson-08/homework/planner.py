@@ -285,6 +285,7 @@ def run_plan_execute(
     started = time.monotonic()
     total_tokens = 0
     steps_run = 0
+    llm_calls = 0                       # 真实模型调用数（规划 + 每次 replan + 最终答复）
     trace: list[dict] = []
     observations: list[str] = []        # 累积每步观察，replan 和最终答复都要用
     replans = 0
@@ -292,11 +293,13 @@ def run_plan_execute(
     def _result(reason, answer=None):
         return RunResult(stop_reason=reason, final_answer=answer, steps=steps_run,
                          total_prompt_tokens=total_tokens,
-                         elapsed_seconds=time.monotonic() - started, trace=trace)
+                         elapsed_seconds=time.monotonic() - started, trace=trace,
+                         llm_calls=llm_calls)
 
     # 1) 初始规划（token 立刻计入）
     plan, tok = make_plan(user_question, client=client, tools=tools, model=planner_model)
     total_tokens += tok
+    llm_calls += 1
 
     while True:
         # 2) 高危计划要人批（auto_approve=False 时停下来交人）
@@ -338,6 +341,7 @@ def run_plan_execute(
             plan, tok = make_plan(user_question, client=client, tools=tools,
                                   model=planner_model, prior_observations=observations)
             total_tokens += tok
+            llm_calls += 1
             continue                             # 回 while 顶，用新计划重来
 
         break        # 6) 没过时、全跑完 → 出循环生成答复
@@ -349,4 +353,5 @@ def run_plan_execute(
                   {"role": "user", "content": user_question + "\n\n观察：\n" + "\n".join(observations)}],
     )
     total_tokens += final_resp.usage.prompt_tokens
+    llm_calls += 1
     return _result(StopReason.FINAL_ANSWER, final_resp.choices[0].message.content or "")

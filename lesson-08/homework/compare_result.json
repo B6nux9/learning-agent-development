@@ -1,0 +1,62 @@
+[
+  {
+    "tid": "T1",
+    "mode": "react",
+    "stop_reason": "final_answer",
+    "llm_calls": 3,
+    "prompt_tokens": 2334,
+    "elapsed_s": 6.44,
+    "answer": "好消息是确认可以申请赔付！以下是详细情况：\n\n---\n\n### 📋 订单 A123 延迟情况\n\n| 项目 | 结果 |\n|------|------|\n| ❌ **是否延迟** | **是，延迟了 6 天** |\n| 💵 **可赔付金额** | **¥17.94** |\n\n由于超过承诺的3天发货时效，系统判定为延迟，按规则可赔付 **¥17.94**。\n\n**请问需要我为你提交赔付申请吗？** 如果同意，我立即帮你操作，赔付款项会直接到账哦～ 😊",
+    "correct": null
+  },
+  {
+    "tid": "T1",
+    "mode": "plan_execute",
+    "stop_reason": "final_answer",
+    "llm_calls": 2,
+    "prompt_tokens": 864,
+    "elapsed_s": 6.14,
+    "answer": "您的订单 A123 当前状态为**运输中**。该订单于2026年6月18日发货，承诺送达时间为3天，但目前已过去9天，已超出承诺时效。由于没有更具体的物流信息，建议您联系发货方或物流公司查询最新进展。",
+    "correct": null
+  },
+  {
+    "tid": "T2",
+    "mode": "react",
+    "stop_reason": "final_answer",
+    "llm_calls": 4,
+    "prompt_tokens": 3956,
+    "elapsed_s": 7.44,
+    "answer": "全部处理完成！以下是 2026 年 6 月订单的延迟与赔付情况汇总：\n\n---\n\n### 📋 订单延迟检查结果\n\n| 订单号 | 是否延迟 | 延迟天数 | 赔付金额 | 状态 |\n|:---:|:---:|:---:|:---:|:---:|\n| A123 | ✅ 是 | 6 天 | **17.94 元** | ✅ 已赔付 |\n| B456 | ❌ 否 | — | — | — |\n| C789 | ✅ 是 | 6 天 | **53.94 元** | ✅ 已赔付 |\n| D012 | ❌ 否 | — | — | — |\n\n### ✅ 赔付已成功申请\n- **A123** → 赔付 **17.94 元** ✔️\n- **C789** → 赔付 **53.94 元** ✔️\n\n共计 **2 笔延迟订单**，已全部提交赔付申请，赔付总额 **71.88 元**。",
+    "correct": null
+  },
+  {
+    "tid": "T2",
+    "mode": "plan_execute",
+    "stop_reason": "final_answer",
+    "llm_calls": 2,
+    "prompt_tokens": 831,
+    "elapsed_s": 29.6,
+    "answer": "根据您的查询结果，2026年6月1日的订单共有两笔（ID: 001, 002），均已发货且交付日期（分别为6月10日和6月15日）早于当前日期（6月17日），未发现延迟发货情况，因此无需申请赔付。如果您需要查看6月其他日期的订单，请提供具体日期以便进一步查询。",
+    "correct": null
+  },
+  {
+    "tid": "T3",
+    "mode": "react",
+    "stop_reason": "final_answer",
+    "llm_calls": 2,
+    "prompt_tokens": 1445,
+    "elapsed_s": 3.28,
+    "answer": "订单 B456 的查询结果如下：\n\n- **订单状态**：已签收\n- **发货日期**：2026-06-20\n- **承诺时效**：3 天\n- **实际用时**：2 天\n- **是否延迟**：❌ **未延迟**\n\n根据 `check_delay` 的判断，该订单并未延迟（`delayed: false`，赔付金额为 0），因此 **不需要申请赔付**，流程结束。",
+    "correct": null
+  },
+  {
+    "tid": "T3",
+    "mode": "plan_execute",
+    "stop_reason": "final_answer",
+    "llm_calls": 3,
+    "prompt_tokens": 1912,
+    "elapsed_s": 12.31,
+    "answer": "根据查询结果，订单 B456 的状态为“已签收”，实际配送用时 2 天，未超过承诺的 3 天，且 `check_delay` 也明确返回 `delayed: false`。因此条件不成立，**不申请赔付**。",
+    "correct": null
+  }
+]

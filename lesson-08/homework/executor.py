@@ -25,7 +25,7 @@ import time
 from dataclasses import dataclass, field
 from enum import Enum
 
-from tools import BusinessError, FatalError, ToolError, TransientError
+from tools import BusinessError, FatalError, TransientError
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +68,7 @@ class RunResult:
     total_prompt_tokens: int = 0
     elapsed_seconds: float = 0.0
     trace: list[dict] = field(default_factory=list)
+    llm_calls: int = 0
 
 
 # ===========================================================================
@@ -275,6 +276,7 @@ def run_react(
             total_prompt_tokens=guard.total_prompt_tokens,
             elapsed_seconds=time.monotonic() - started,
             trace=trace,
+            llm_calls=guard.steps,   # ReAct 里每轮 = 1 次 API 调用，故 llm_calls == steps
         )
 
     while True:

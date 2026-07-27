@@ -64,6 +64,12 @@ TASKS = [
     #   提示：用 tools.py 里的假数据设计一个"如果……就……否则……"的问题，
     #         而且要让"如果"的答案在提问时无法从字面判断。
     #   写完在 expectation 里先押注：你觉得 P&E 会怎么翻车？
+    Task(
+        tid="T3",
+        question="如果订单 B456 延迟了，就申请赔付，否则不申请。",
+        shape="branch_on_observation",
+        expectation="P&E 翻车：规划期无法知道订单是否延迟，必须先看中间结果再决定后续步骤。",
+    ),
 ]
 
 
@@ -111,7 +117,7 @@ def measure(task: Task, mode: str, *, client) -> Measurement:
         tid=task.tid,
         mode=mode,
         stop_reason=result.stop_reason.value,
-        llm_calls=result.steps,
+        llm_calls=result.llm_calls,
         prompt_tokens=result.total_prompt_tokens,
         elapsed_s=round(time.perf_counter() - t0, 2),
         answer=result.final_answer,
@@ -134,7 +140,26 @@ def main() -> None:
     #      （**这个"没法自动判"的痛点，就是 L12 要上 LLM-as-judge 的理由**。
     #        你 L7 建评估集时已经撞过一次"子串匹配区分不了确认与否认"，这是第二次。）
     #   把原始数据也存一份 JSON，方便复跑对比。
-    raise NotImplementedError("TODO-C2")
+        # 存原始数据（复跑对比用）—— 用 __file__ 定位，避免依赖当前工作目录
+    out = os.path.join(os.path.dirname(__file__), "compare_result.json")
+    with open(out, "w", encoding="utf-8") as f:
+        json.dump([asdict(m) for m in rows], f, ensure_ascii=False, indent=2)
+
+    # 任务 tid -> 形状 的查找表（Measurement 里没存 shape，从 TASKS 补）
+    shape = {t.tid: t.shape for t in TASKS}
+
+    # markdown 表
+    lines = [
+        "| 任务 | 形状 | 模式 | stop_reason | LLM调用 | prompt_tokens | 耗时(s) | 正确? |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for m in rows:
+        correct = "" if m.correct is None else ("✅" if m.correct else "❌")   # 没法自动判 → 留空手填
+        lines.append(
+            f"| {m.tid} | {shape.get(m.tid, '')} | {m.mode} | {m.stop_reason} "
+            f"| {m.llm_calls} | {m.prompt_tokens} | {m.elapsed_s} | {correct} |"
+        )
+    logger.info("\n%s", "\n".join(lines))
 
 
 if __name__ == "__main__":

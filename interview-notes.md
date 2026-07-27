@@ -241,9 +241,66 @@ uv init/add/sync;pyproject.toml + uv.lock 入库,双机一键复现。比 conda 
 
 ---
 
+## 八、L8:路由 / ReAct / Plan-and-Execute(新增,JD 6/10)
+
+### "讲讲 ReAct?"——先说它不是新东西
+现代 **function-calling agent loop 本质就是 ReAct 的协议化版本**:Thought(模型推理)→
+Action(结构化 `tool_calls` 字段)→ Observation(`role="tool"` 消息)→ 回到 Thought。
+原论文年代(GPT-3)没有 function calling,ReAct 是纯 prompt 格式、靠正则抠 `Action: query_order[A123]`;
+今天 API 把它协议化了。**文本版还有用**:模型不支持 tool use 时(小模型/老开源模型)的降级方案。
+
+### "ReAct 和 Plan-and-Execute 怎么选?"——它们是一条轴的两端
+**不是两种架构,是"重规划频率"这条连续轴的两端**:ReAct 每步重规划 ↔ P&E 只规划一次,
+真实系统落中间,所以主流实现都是 **Plan → Execute → 偏差触发 Replan**。
+- 失败模式:每步能改主意→绕圈/无限循环;从不改主意→**机械执行过时计划**。
+- **反直觉点:P&E 不比 ReAct"更可控",它只是把不确定性提前了**——赌注一次性押在"规划期信息是否足够"。
+
+### "客服 agent 该用哪种?"(王牌:自主性是成本不是收益)
+> **自主性是成本,不是收益。只在"环境不可预测 + 试错便宜"两条同时成立时才买它。**
+> coding agent(Claude Code)两条都满足→纯 ReAct(它的 plan mode 是给人审批的工件,不是调度器);
+> 客服两条都不成立(意图有界、合规硬约束、延迟敏感、错退款代价大)→ **静态路由收敛意图 + 分支内跑受限短 loop**。
+
+### "你实测过两种范式吗?"(王牌:亲手跑 + 三个打脸)
+我在三类任务上真跑对比,**ReAct 三战全胜或打平**:
+- **单步任务**:P&E 调用数更少但延迟打平——因为它的规划走慢模型,**调用数少≠更快,要看每次调用成本**。
+- **并行扇出任务**:P&E **幻觉翻车**——编出不存在的订单号。深层原因:**扇出目标要运行时才发现
+  (先 list 才知道有哪些单),而 P&E 规划期就得定死,时序天生冲突**。独立可并行还不够,目标必须规划期已知。
+- **观察分支任务**:P&E 靠 replan 自救但慢 4 倍;ReAct 原生处理(看到观察再决定)。
+> **最值钱的一条:光看 token/调用数会把"失败"读成"高效"**——P&E 最省那次(831 token)其实啥也没干、
+> 直接幻觉。所以 correct 列必须人工判,**这就是 L12 要上 LLM-as-judge 的动机**(第三次撞上子串/数字判不了对错)。
+
+### "生产级 agent loop 要有什么?"(工程硬功)
+玩具 `while True` 上不了生产。至少要:
+1. **终止语义显式枚举**(不返回字符串):`FINAL_ANSWER/HANDOFF` + 被迫的 `MAX_STEPS/NO_PROGRESS/BUDGET_EXCEEDED/TOOL_FATAL`。
+   为什么枚举→**可观测(trace 字段)、可测试(pytest 断言它)、上层能分情况兜底**。
+2. **纯逻辑/副作用分离**:终止判断、no-progress、预算记账全是不碰网络的纯函数→能 pytest;碰 API 的只做接线。
+3. **每轮一行结构化 JSON 日志**(给机器采,算 P95 延迟/token 成本/工具分布),用 logger 不用 print。
+4. **循环上限不是防模型犯傻,是防钱包破产**:失控 loop + 长上下文 = 平方级 token。
+
+### "工具执行层怎么区分模型错和系统错?"(细节分)
+两级:**调用前**用 `inspect.signature().bind()` 校验参数,把"模型传错参数名"挡在门外并回传 expected 让它自愈;
+**调用后**的异常按三类分流——业务错(原文回传自愈)、致命错(**内部记详细日志、外部只回脱敏话术**并终止)、
+瞬时错(该代码重试)。硬约束:任何路径都返回字符串(每个 tool_call_id 必须有且仅有一条回复)。
+
+### "stop_reason 该怎么设计?"(可观测性判据)
+**stop_reason 要如实说出"哪道闸门拦住了你"**。判据:根因和排查方向同一类才可复用,否则新加成员。
+- "计划有环"和"运行时转圈"不同类(验证期 0 步 vs 运行期多步)→ 新加 `INVALID_PLAN`,别复用 `NO_PROGRESS`。
+- "重规划额度耗尽"和"步数上限"同类(都是计数放弃)→ 可复用 `MAX_STEPS`(或新加 `REPLAN_EXHAUSTED`)。
+- 但两者都≠ `BUDGET_EXCEEDED`(金钱闸)——**计数闸和金钱闸别混报**。
+
+### "json_schema 端点不支持怎么办?"(生产战况)
+DeepSeek 端点对 `response_format: json_schema` 返回 400(`This response_format type is unavailable now`),
+**6 次规划调用全部降级** `json_object` + 把字段要求写进 prompt + 自己校验。**graceful degradation**:
+json_schema 失败退 json_object,解析也失败就退 ReAct——每层有下层兜着,系统不会因一环挂掉就整个崩。
+
+### 度量踩坑(项目细节,显严谨)
+对比实验最初用 `result.steps` 当 LLM 调用数,但 P&E 的 steps 数的是**工具执行数**不是模型调用数,
+谎报"P&E 省一半"。**教训:对比实验里度量口径错一个,结论全废**。修法:加独立 `llm_calls` 字段各自如实计数。
+
+---
+
 ## 待补(学完对应课程后回来填)
 - [ ] L6 遗留:**单元测试系统学习**(测试由教练代写,用户选择先专注实现)→ 阶段二 capstone 补
-- [ ] L8:ReAct / Plan-and-Execute
 - [ ] L9:LangChain 实战(填第一节第 3 条)
 - [ ] L10:MCP
 - [ ] L11:Multi-Agent

@@ -10,7 +10,7 @@
 - 路径：**分级(tiered)**
 - 目标终点等级：**Advanced（第 4 级）** —— 能独立设计并搭出 production 级客服 agent，
   懂每个组件的权衡，在面试里讲透细节。不追 Expert。
-- 起始日期 / 最近更新：2026-07-13 / 2026-07-26（L7 封版）
+- 起始日期 / 最近更新：2026-07-13 / 2026-07-27（**L8 封版**）
 - 默认模型：**DeepSeek**（`deepseek-chat`，OpenAI 兼容，写法可迁移通义千问/GPT）
 - 环境：conda 环境 `agent`，Python 3.12
 - 仓库（**用户在两台机器上学，按当前系统判断路径**）：
@@ -71,9 +71,11 @@
 - [x] **L7 RAG 与向量数据库** —— 已完成，达标（quiz 3题过；作业 `rag.py` 端到端跑通：
   切块+OpenAI embedding+ChromaDB+grounding；口语/近义命中、库外问题 grounding 挡幻觉；
   **亲手验证 chunking 决定 RAG 上限**：固定窗口 vs 按标题切对比，检索与答案质量都上台阶）
-- [~] **L8 路由 / ReAct / Planning** —— **进行中**（JD 6/10）　← **当前断点**
-      讲授 ✅ · quiz ✅ 达标 · 作业进行中（Part A 写了一半）。详见文末「L8 交接细节」。
-- [ ] **L9 主流框架：用 LangChain 重写项目** ——（JD 6/10，**从 L14 大幅前移**；简历关键词）
+- [x] **L8 路由 / ReAct / Planning** —— **已完成，达标，已封版**（JD 6/10）
+      讲授 ✅ · quiz ✅ · 作业 25 TODO 全完成 · **11 测试全绿** · Part C 对比实验跑通 · findings.md 定稿 ·
+      summary.pdf 出好 · interview-notes 补齐。门禁三条全满足。详见文末「L8 封版记录」。
+- [ ] **L9 主流框架：用 LangChain 重写项目** ——（JD 6/10，**从 L14 大幅前移**；简历关键词）　← **当前断点**
+      （可选前置：v3 的 smolagents CodeAgent 锚点 ≤90min，看"代码即动作"真实实现，做成锚点模板）
 - [ ] **L10 MCP 协议** ——（JD 4/10，**新增**；2025-26 热点，面试常问）
 - [ ] 🎯 **阶段二 capstone：简历级客服 Agent 项目**（最重要产出，直接写进简历）
       **capstone 待办（含 L5/L6 遗留）**：
@@ -101,7 +103,11 @@
   按每周 5-10 小时 → **5-10 周**，落在 1-3 个月窗口内，可行但要保持节奏。
 
 ## 当前掌握等级评估
-**Intermediate 稳步推进（阶段二进行中，已完成 L5/L6）**。除阶段一能力外，已掌握长期记忆存取闭环、
+**Intermediate 稳步推进（阶段二进行中，已完成 L5/L6/L7/L8）**。L8 亮点：能独立把玩具 loop 升级成
+生产级 executor（显式终止语义、纯逻辑可测、结构化日志），能设计并跑通 ReAct vs P&E 对比实验、
+并从三个被打脸的 expectation 里提炼出正确权衡（"扇出目标运行时发现 vs 规划期定死"、
+"光看 token 会把失败读成高效"）。工程判断力持续上台阶（stop_reason 可观测性判据、度量口径修正）。
+**头号短板"改一半/漏 return"仍是最顽固项，本节又犯 4 次。**除阶段一能力外，已掌握长期记忆存取闭环、
 上下文压缩（阈值触发/混合策略/切点安全）、Prompt 工程、结构化输出，并能把逻辑拆成**可测的纯模块**。
 **L6 亮点：几乎全程自驱 debug**——阈值 thrashing、反复摘要衰减、模型可用性、`-`vs`_` 一字之差，
 都是他跑出来撞明白的。**工程判断力明显上台阶**（会追问"生产环境怎么做"、主动要求对齐生产规范）。
@@ -213,10 +219,31 @@
   ③ prompt 分支要按**主题**划而非按**具体说法**划（v1 三条规则边界打架 → v2 两条按主题，18/18）。
 - **这份评估集一直养到 capstone 和 L12**，每次改 RAG/prompt 都要跑全套回归。
 
-## 🔶 L8 交接细节（2026-07-26 晚，用户明天换到 **macOS** 继续）
+## 🔶 L8 封版记录（2026-07-27，macOS 续完并封版）
 
-> 状态：**讲授 ✅ · quiz ✅ 达标 · 作业 Part A 进行中。未封版。**
-> mac 上开工先 `git pull` 然后 `uv sync`。
+> 状态：**已封版。作业 25 TODO 全完成，11 测试全绿，Part C 跑通，summary.pdf 出好。**
+>
+> ### 封版当天做完的（2026-07-27，mac）
+> - 续 Part A：修 `record_step` 下划线 bug、TODO-3 `should_stop`（budget 优先 + `>=` 边界 + `first and` 排空指纹）、
+>   TODO-6 `run_react`（补回被删的 `_normalize` append、决策 2(B) fatal 后不触发副作用）、TODO-7 结构化日志（DRY 重构）。
+> - Part B 全写：`PLAN_SCHEMA`（arguments 存 JSON 字符串）、`parallel_groups`（Kahn 分层+环检测+幻觉依赖）、
+>   `is_plan_stale`（只做信号①）、`make_plan`（json_schema→json_object 降级 + 解析兜底）、`run_plan_execute`。
+>   新增 2 个 StopReason 语义：`INVALID_PLAN` / `REPLAN_EXHAUSTED`。
+> - `test_executor.py` 10 个 TODO-T 全补（改对 2 处枚举名 + 3 处 final_answer 语义 + 2 处 fatal 语义）→ 11 绿。
+> - **度量修正**：给 `RunResult` 加 `llm_calls` 字段（P&E 的 steps≠模型调用数），两 executor 各自如实计数。
+> - Part C 真跑（DeepSeek，json_schema 全程 400 降级 json_object）+ `max_replans=0` 现场 + findings.md 定稿。
+> - 门禁三条全过：环境可复现 ✅ / 11 测试含正反 ✅ / 无 print·无死码·无未用 import ✅。
+>
+> ### L8 关键结论（供后续回扣）
+> - **Part C 三个 expectation 全被不同程度打脸**：ReAct 三战全胜或打平；P&E 在扇出任务幻觉翻车
+>   （目标运行时发现 vs 规划期定死，时序冲突）；"光看 token/调用数会把失败读成高效"→ L12 LLM-judge 动机。
+> - **头号短板"改一半/漏 return"本节又犯 4 次**（record_step 漏下划线、is_plan_stale 漏 return、
+>   trace 声明没 append、run_react 删掉了给的 append 行）——已固化 4 条自查动作，下次继续盯。
+> - **未做（留 capstone/L13）**：is_plan_stale 信号②（语义矛盾，需 LLM-judge）、worth_planning 回退 ReAct、
+>   API 层超时/限流/重试。
+
+### （历史）原 L8 交接细节 —— 2026-07-26 晚
+> mac 上开工先 `git pull` 然后 `uv sync`。以下为封版前的进行中记录，已全部完成。
 
 ### 已产出
 - `lesson-08/notes.md` —— 讲义。**§0「最小记忆集」是后加的**：用户读完说"能理解但记不住"，
@@ -283,9 +310,14 @@
 ---
 
 ## 下一步（给下个 session 的明确指令）
-- **开局顺序**：①`git pull` ②读本文件（**尤其上面的「L8 交接细节」**）
+- **开局顺序**：①`git pull` ②读本文件（**尤其「L8 封版记录」**）
   ③**读 `COURSE-OVERVIEW-v3.md`**（权威大纲）④确认环境：`uv sync`。
-- **立刻要做**：接上面「L8 交接细节 → 下一步」。**L8 未封版，作业进行中。**
+- **立刻要做**：**L8 已封版**。下一步有两个选项，由用户开口决定（别抢跑）：
+  1. **v3 smolagents CodeAgent 锚点**（≤90min，第一个锚点，做成模板）——看"代码即动作"(CodeAct)真实实现，
+     和他手写的 JSON tool-calling ReAct 对照。引导问题见 v3 §L8。
+  2. **直接进 L9**：用 LangChain / LangGraph 重写项目（JD 6/10，简历关键词）。v3 指定锚点 LangGraph。
+- **L8 已讲完，供后续回扣**：ReAct=他 L2 手写的 loop；重规划频率轴；自主性是成本；
+  "扇出目标运行时发现 vs P&E 规划期定死"；stop_reason 如实报闸门；工具层调用前 bind 校验 + 调用后三类分流。
 - L8 教学要点（已讲完，供 summary 与后续回扣用）：**L8 路由 / ReAct / Planning**（JD 6/10）。**核心回扣**：
   他 L2 手写的 agent loop **本质就是 ReAct**（Reason→Act→Observe），L8 是给这个"涌现的循环"
   正式命名 + 讲清 ReAct vs Plan-and-Execute 取舍。**别让他觉得是全新东西——是给旧知识命名。**
