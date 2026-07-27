@@ -19,6 +19,7 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import dataclass, field
+import time
 
 from executor import RunResult, StopReason, ToolCallRecord, _execute_tool
 
@@ -52,8 +53,11 @@ PLAN_SCHEMA = {
                             #   ② depends_on —— 依赖哪些步骤 id（数组）。parallel_groups 全靠它。
                             #   ③ purpose —— 这步干什么（一句话）。给人看的，审批时要读。
                             # ——三个，写完数一遍。
+                            "arguments": {"type": "string", "description": "工具参数的 JSON 字符串"},
+                            "depends_on": {"type": "array", "items": {"type": "string"}, "description": "依赖的步骤 id 列表"},
+                            "purpose": {"type": "string", "description": "这步的目的，一句话说明"},
                         },
-                        "required": ["id", "tool"],  # TODO-1 续：把你新加的字段补进 required
+                        "required": ["id", "tool", "arguments", "depends_on", "purpose"],  # TODO-1 续：把你新加的字段补进 required
                         "additionalProperties": False,
                     },
                 },
@@ -63,8 +67,12 @@ PLAN_SCHEMA = {
                 },
                 # TODO-1 续：再想想还缺什么。提示：如果模型判断"这个任务根本不该提前规划"，
                 #            它怎么告诉你？（回扣讲义 §4：不是所有任务都值得规划）
+                "worth_planning": {
+                    "type": "boolean",
+                    "description": "模型判断这个任务是否值得提前规划（False 表示不值得规划）",
+                },
             },
-            "required": ["steps", "requires_human_approval"],
+            "required": ["steps", "requires_human_approval", "worth_planning"],
             "additionalProperties": False,
         },
     },
@@ -84,6 +92,7 @@ class PlanStep:
 class Plan:
     steps: list[PlanStep]
     requires_human_approval: bool = False
+    worth_planning: bool = True
 
 
 # ===========================================================================
@@ -109,8 +118,27 @@ def parallel_groups(plan: Plan) -> list[list[str]]:
             ③ 依赖了一个不存在的 step id 怎么办（模型幻觉）
             ——三件，写完数一遍。
     """
-    raise NotImplementedError("TODO-2")
+    deps = {s.id: set(s.depends_on) for s in plan.steps}
+    all_ids = set(deps)
 
+    # ③ 防模型幻觉：依赖必须指向真实存在的 id
+    for sid, d in deps.items():
+        missing = d - all_ids
+        if missing:
+            raise ValueError(f"步骤 {sid} 依赖了不存在的步骤: {missing}")
+
+    groups: list[set[str]] = []
+    done: set[str] = set()                 # 已经排进某层的 id
+
+    while len(done) < len(all_ids):        # 还有没排完的就继续
+        # ① 本层 = 还没排过、且依赖已全满足的步骤
+        layer = {sid for sid, d in deps.items() if sid not in done and d <= done}
+        # ② 环检测：还有剩却一个都捞不出 → 有环
+        if not layer:
+            raise ValueError(f"检测到环形依赖，剩余: {all_ids - done}")
+        groups.append(layer)
+        done |= layer                      # done 并上这一层
+    return groups
 
 def is_plan_stale(step: PlanStep, observation: str) -> bool:
     """判断"计划过时了"—— 触发 replan 的条件。
@@ -126,14 +154,25 @@ def is_plan_stale(step: PlanStep, observation: str) -> bool:
             怎么在不写死业务规则的前提下判断②？这是个开放题，
             **写下你的方案和它的局限**（面试会追问"你怎么知道计划过时了"）。
     """
-    raise NotImplementedError("TODO-3")
+    try:
+        obj = json.loads(observation)
+    except (json.JSONDecodeError, TypeError):
+        return False                    # 解析不了 → 当它不是 error,不触发 replan
+    if isinstance(obj, dict) and "error" in obj:
+        return True
+    # ② 观察与计划假设矛盾（如 check_delay 返回 delayed=false 却计划要赔付）：
+    #    本版只做 ① error 检测。② 的通用做法是 LLM-as-judge 判断
+    #    "观察是否推翻了计划假设"，但每步多一次 API 调用，贵且慢；
+    #    规则法（硬查 delayed==false）便宜但不通用。取舍留待 capstone。
+    return False
+    
 
 
 # ===========================================================================
 # 3) 接线层
 # ===========================================================================
 def make_plan(user_question: str, *, client, tools: list[dict], model: str = "deepseek-v4-pro",
-              prior_observations: list[str] | None = None) -> Plan:
+              prior_observations: list[str] | None = None) -> tuple[Plan, int]:
     """让模型产出一个结构化计划。
 
     ⚠️ 两个真实工程坑，你会撞上：
@@ -151,7 +190,65 @@ def make_plan(user_question: str, *, client, tools: list[dict], model: str = "de
             ③ 解析返回的 JSON，组装成 Plan 对象；解析失败要有兜底
             ——三个要点，写完数一遍。
     """
-    raise NotImplementedError("TODO-4")
+    # ① 把可用工具列给模型（它得知道能用什么才能规划）
+    tool_lines = [f"- {t['function']['name']}: {t['function']['description']}" for t in tools]
+
+    # ② replan 时把已知事实带进去，否则新计划会重犯旧错
+    context = ""
+    if prior_observations:
+        context = "已知事实（上一版计划执行中观察到的）：\n" + "\n".join(prior_observations)
+
+    sys_prompt = (
+        "你是任务规划器。把用户请求拆成可执行的工具调用步骤，用 depends_on 表达依赖。\n"
+        "涉及不可逆写操作（如赔付）时把 requires_human_approval 设为 true。\n"
+        "如果任务简单到不值得提前规划，把 worth_planning 设为 false。\n"
+        f"可用工具：\n" + "\n".join(tool_lines)
+    )
+
+    # ③ 调 API —— 先试 json_schema，端点不支持就降级
+    try:
+        resp = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "system", "content": sys_prompt},
+                      {"role": "user", "content": user_question + "\n" + context}],
+            response_format=PLAN_SCHEMA,          # 结构化输出契约
+        )
+    except Exception as e:
+        logger.warning("json_schema 不支持，降级 json_object: %s", e)
+        # ___你补___: 降级方案
+        #   response_format={"type": "json_object"}
+        #   且必须把"输出字段要求"写进 prompt（json_object 模式模型不知道 schema）
+        #   —— 把这段降级过程记进 interview-notes，是好素材
+        resp = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "system", "content": sys_prompt + "\n输出字段要求：\n" + json.dumps(PLAN_SCHEMA["json_schema"]["schema"])},
+                      {"role": "user", "content": user_question + "\n" + context}],
+            response_format={"type": "json_object"},
+        )
+
+    prompt_tokens = resp.usage.prompt_tokens
+    raw = resp.choices[0].message.content
+
+    # ④ 解析 JSON → Plan 对象；解析失败要兜底
+    try:
+        data = json.loads(raw)                 # ← 想想：这里会不会抛？要不要 try？
+    except (json.JSONDecodeError, TypeError):
+        logger.warning("规划返回非法 JSON，回退：%r", raw[:200] if raw else raw)
+        return Plan(steps=[], worth_planning=False), prompt_tokens
+    steps = [
+        PlanStep(
+            id=s["id"],
+            tool=s["tool"],
+            arguments=json.loads(s["arguments"]) if s.get("arguments") else {},         # ⚠️ 见下方"参数那个坑"
+            depends_on=s.get("depends_on", []),
+            purpose=s.get("purpose", ""),
+        )
+        for s in data["steps"]
+    ]
+    plan = Plan(steps=steps,
+                requires_human_approval=data.get("requires_human_approval", False),
+                worth_planning=data.get("worth_planning", True))
+    return plan, prompt_tokens
 
 
 def run_plan_execute(
@@ -185,4 +282,71 @@ def run_plan_execute(
     ⚠️ 注意：规划那次 LLM 调用的 token **也要算进 total_prompt_tokens**。
        不算的话对比数据就是假的 —— 这是最容易自欺欺人的地方。
     """
-    raise NotImplementedError("TODO-5")
+    started = time.monotonic()
+    total_tokens = 0
+    steps_run = 0
+    trace: list[dict] = []
+    observations: list[str] = []        # 累积每步观察，replan 和最终答复都要用
+    replans = 0
+
+    def _result(reason, answer=None):
+        return RunResult(stop_reason=reason, final_answer=answer, steps=steps_run,
+                         total_prompt_tokens=total_tokens,
+                         elapsed_seconds=time.monotonic() - started, trace=trace)
+
+    # 1) 初始规划（token 立刻计入）
+    plan, tok = make_plan(user_question, client=client, tools=tools, model=planner_model)
+    total_tokens += tok
+
+    while True:
+        # 2) 高危计划要人批（auto_approve=False 时停下来交人）
+        if plan.requires_human_approval and not auto_approve:
+            return _result(StopReason.HANDOFF)
+
+        # 3) 分层 —— 记进 trace（Part C 要用它说明"能并行几组"）
+        try:
+            groups = parallel_groups(plan)
+        except ValueError as e:
+            logger.warning("计划有环/幻觉依赖：%s", e)
+            return _result(StopReason.INVALID_PLAN)      # 计划本身坏了，该报哪个 stop_reason？
+        trace.append({"event": "plan", "groups": [sorted(g) for g in groups],
+                      "replans": replans, "worth_planning": plan.worth_planning})
+
+        # 4) 按层顺序执行（本作业不必真并发，顺序跑每层即可）
+        id_to_step = {s.id: s for s in plan.steps}
+        stale = False
+        for group in groups:
+            for sid in sorted(group):
+                step = id_to_step[sid]
+                # ⚠️ _execute_tool 要 str，PlanStep.arguments 是 dict → json.dumps 转回去
+                obs, fatal = _execute_tool(step.tool, json.dumps(step.arguments), tool_impls)
+                steps_run += 1
+                observations.append(f"{step.tool}({step.arguments}) -> {obs}")
+                if fatal:
+                    return _result(StopReason.TOOL_FATAL)
+                if is_plan_stale(step, obs):     # 计划过时闸门
+                    stale = True
+                    break
+            if stale:
+                break
+
+        # 5) 过时 → replan（有额度就带着观察重规划；没额度就停）
+        if stale:
+            if replans >= max_replans:
+                return _result(StopReason.REPLAN_EXHAUSTED)       # 额度用尽，该报哪个？
+            replans += 1
+            plan, tok = make_plan(user_question, client=client, tools=tools,
+                                  model=planner_model, prior_observations=observations)
+            total_tokens += tok
+            continue                             # 回 while 顶，用新计划重来
+
+        break        # 6) 没过时、全跑完 → 出循环生成答复
+
+    # 综合所有观察，让模型生成最终答复（这次调用的 token 也要算！）
+    final_resp = client.chat.completions.create(
+        model="deepseek-v4-flash",
+        messages=[{"role": "system", "content": "根据以下工具观察结果回答用户，不要编造。"},
+                  {"role": "user", "content": user_question + "\n\n观察：\n" + "\n".join(observations)}],
+    )
+    total_tokens += final_resp.usage.prompt_tokens
+    return _result(StopReason.FINAL_ANSWER, final_resp.choices[0].message.content or "")

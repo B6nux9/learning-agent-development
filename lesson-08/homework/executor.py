@@ -42,6 +42,8 @@ class StopReason(str, Enum):
     NO_PROGRESS = "no_progress"          # 被迫：进展没了（原地转圈）
     BUDGET_EXCEEDED = "budget_exceeded"  # 被迫：钱没了
     TOOL_FATAL = "tool_fatal"            # 被迫：工具死了
+    INVALID_PLAN = "invalid_plan"
+    REPLAN_EXHAUSTED = "replan_exhausted"
 
 
 @dataclass(frozen=True)
