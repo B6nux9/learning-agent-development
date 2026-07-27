@@ -17,6 +17,8 @@ L8 作业 · Part A：把玩具 loop 升级成生产级 ReAct executor
 
 from __future__ import annotations
 
+import inspect
+
 import json
 import logging
 import time
@@ -117,7 +119,7 @@ class LoopGuard:
         """
         #我认为两轮的工具调用顺序不同，应该算作不同的指纹，因为顺序可能影响执行逻辑和结果。
         self._steps += 1
-        self.total_prompt_tokens += prompt_tokens
+        self._total_prompt_tokens += prompt_tokens
         self._history_fingerprints.append(tool_calls)
 
     def should_stop(self) -> StopReason | None:
@@ -127,8 +129,19 @@ class LoopGuard:
                 如果同一时刻既超了步数又超了预算，你希望 trace 里记哪个？
                 想清楚再排，并在注释里写一句理由。
         """
-        raise NotImplementedError("TODO-3")
-
+        # 异常信号比常态更该被看见
+        if self._total_prompt_tokens >= self.max_prompt_tokens:
+            return StopReason.BUDGET_EXCEEDED
+        if self._steps >= self.max_steps:
+            return StopReason.MAX_STEPS
+        # 空指纹是"没点工具"，不是"转圈"；纯逻辑不能依赖调用方不喂 []
+        if len(self._history_fingerprints) >= self.no_progress_threshold:
+            # 检查最近 no_progress_threshold 轮的指纹是否完全相同
+            recent = self._history_fingerprints[-self.no_progress_threshold:]
+            first = recent[0]
+            if first and all(f == first for f in recent[1:]):
+                return StopReason.NO_PROGRESS
+        return None
     # --- 下面两个只读属性给接线层拼 RunResult 用，已给你 ---
     @property
     def steps(self) -> int:
@@ -171,11 +184,12 @@ def _execute_tool(name: str, raw_arguments: str, tool_impls: dict) -> tuple[str,
     def err(message: str, *, fatal: bool = False, **extra) -> tuple[str, bool]:
         return json.dumps({"error": message, **extra}, ensure_ascii=False), fatal
 
-    if name not in tool_impls:
+    fn = tool_impls.get(name)
+    if fn is None:
         return err(f"未知工具 '{name}'", available_tools=sorted(tool_impls))
 
-    try: 
-        arguments = json.loads(raw_arguments)
+    try:
+        arguments = json.loads(raw_arguments) if raw_arguments.strip() else {}
     except json.JSONDecodeError as e:
         return err(f"参数不是合法 JSON: {e}", received=raw_arguments[:200])
 
@@ -183,49 +197,32 @@ def _execute_tool(name: str, raw_arguments: str, tool_impls: dict) -> tuple[str,
         return err(f"参数必须是 JSON 对象（dict），但收到 {type(arguments).__name__}")
 
     try:
-        result = tool_impls[name](**arguments)
-    except (BusinessError, TypeError) as e:
-        return err(str(e))
-    except FatalError as e:
-        logger.error("tool_fatal name=%s error=%s", name, str(e))
-        return err("服务暂时不可用", fatal=True)
+        signature = inspect.signature(fn)
+        signature.bind(**arguments)
+    except TypeError as e:
+        return err(f"参数不匹配: {e}", expected=sorted(signature.parameters))
+    except ValueError:
+        pass  # 少数 C 实现的函数取不到签名，跳过校验直接调
+
+    try:
+        result = fn(**arguments)
+    except BusinessError as e:
+        return err(str(e))                      # 原文回传，模型能据此自愈
     except TransientError as e:
-        # TODO(L13): 重试
+        # TODO(L13): 退避重试 2~3 次后再放弃
         logger.warning("tool_transient name=%s error=%s", name, e)
         return err("服务暂时不可用，请稍后再试", fatal=True)
-    except Exception as e:
-        logger.exception("tool_unexpected name=%s error=%s", name, e)
+    except FatalError as e:
+        logger.error("tool_fatal name=%s error=%s", name, e)   # 内部详细
+        return err("服务暂时不可用", fatal=True)                 # 外部脱敏
+    except Exception:
+        logger.exception("tool_unexpected name=%s", name)
         return err("工具执行出现未预期错误", fatal=True)
 
     if not isinstance(result, str):
         result = json.dumps(result, ensure_ascii=False, default=str)
     return result, False
 
-
-
-    #检查工具名是否存在
-    # if name not in tool_impls:
-    #     error_result = {"error": f"Tool '{name}' not found. Choose tools from {list(tool_impls.keys())}."}
-    #     return (json.dumps(error_result, ensure_ascii=False), False)
-    # #尝试解析 JSON 参数
-    # try:
-    #     arguments = json.loads(raw_arguments)
-    # except json.JSONDecodeError as e:
-    #     error_result = {"error": f"JSON decode error: {str(e)}"}
-    #     return (json.dumps(error_result, ensure_ascii=False), False)
-    # #尝试执行工具
-    # try: 
-    #     result = str(tool_impls[name](**arguments))
-    #     return (json.dumps(result, ensure_ascii=False), False)
-    # except BusinessError as e:
-    #     error_result = {"error": str(e)}
-    #     return (json.dumps(error_result, ensure_ascii=False), False)
-    # except FatalError as e:
-    #     error_result = {"error": str(e)}
-    #     return (json.dumps(error_result, ensure_ascii=False), True)
-    # except TransientError as e:
-    #     error_result = {"error": str(e)}
-    #     return (json.dumps(error_result, ensure_ascii=False), True)
 
 def run_react(
     user_question: str,
@@ -260,10 +257,91 @@ def run_react(
 
     ⚠️ 门禁条件 3：全程用 logger，**一个 print 都不许有**。
     """
-    raise NotImplementedError("TODO-6")
+    started = time.monotonic()          # 不用 time.time()：系统时钟被调会算出负数
+    messages: list[dict] = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_question},
+    ]
+    trace: list[dict] = []
+
+    def _result(reason: StopReason, answer: str | None = None) -> RunResult:
+        """所有出口都走这里 —— 你的头号短板专治：只有一处拼装，就不会漏字段。"""
+        return RunResult(
+            stop_reason=reason,
+            final_answer=answer,
+            steps=guard.steps,
+            total_prompt_tokens=guard.total_prompt_tokens,
+            elapsed_seconds=time.monotonic() - started,
+            trace=trace,
+        )
+
+    while True:
+        step_started = time.monotonic()
+
+        # (a) 调 API —— 你补：client.chat.completions.create(...)，记得带 tools
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            tools=tools,
+        )
+        # (b) 取 msg 和真实 token —— 你补：response.choices[0].message / response.usage.prompt_tokens
+        msg = response.choices[0].message
+        prompt_tokens = response.usage.prompt_tokens
+
+        # (c) 把本轮指纹交给 guard —— 你补
+        #     msg.tool_calls 可能是 None（没点单）→ 先兜底成 []
+        #     每个 tc 转成 ToolCallRecord(name=..., arguments=...)
+        #     ⚠️ arguments 存**原始字符串** tc.function.arguments，不是解析后的 dict
+        tool_calls = msg.tool_calls or []
+        tool_call_records = [ToolCallRecord(name=tc.function.name, arguments=tc.function.arguments) for tc in tool_calls]
+        guard.record_step(tool_call_records, prompt_tokens)
+        # (d) 每轮一行结构化日志 —— 你补：_log_step(...)
+        step_record = {
+            "step": guard.steps,
+            "tool_names": [r.name for r in tool_call_records],
+            "prompt_tokens": prompt_tokens,
+            "elapsed_ms": round((time.monotonic() - step_started) * 1000, 1),
+        }
+        _log_step(step_record)
+        trace.append(step_record)
+        
+        # (e) 没点工具 = 拿到最终答案，收工
+        #     ⚠️ msg.content 可能是 None —— 兜底！（L6 你就栽在这）
+        # 你补
+        if not tool_calls:
+            if msg.content:
+                return _result(StopReason.FINAL_ANSWER, msg.content)
+            logger.warning("empty_final_answer step=%d", guard.steps)
+            return _result(StopReason.FINAL_ANSWER, "")   # 或者你认为该报别的 reason
+        # (f) 有工具：先把 assistant 消息 append（必须在 tool 消息之前）
+        messages.append(_normalize(msg))
+
+        # (g) 逐个执行工具 —— 你补
+        #     每个都要 append 一条 {"role": "tool", "tool_call_id": ..., "content": ...}
+        #     记下是否有 fatal，但**别在循环里直接 return**（见决策 2）
+        fatal = False
+        for tc in tool_calls:
+            if fatal:
+                result_str = json.dumps({"error": "已取消：本轮上一个工具致命失败"}, ensure_ascii=False)
+                is_fatal = True
+            else:
+                result_str, is_fatal = _execute_tool(tc.function.name, tc.function.arguments, tool_impls)
+                fatal = fatal or is_fatal
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tc.id,
+                "content": result_str,
+            })
+        # (h) 有 fatal → 收工，stop_reason=TOOL_FATAL —— 你补
+        if fatal:
+            return _result(StopReason.TOOL_FATAL)
+        # (i) 问 guard —— 你补：should_stop() 非 None 就收工
+        stop_reason = guard.should_stop()
+        if stop_reason is not None:
+            return _result(stop_reason)
 
 
-def _log_step(*, step: int, tool_calls: list[ToolCallRecord], prompt_tokens: int, elapsed: float) -> None:
+def _log_step(record: dict) -> None:
     """每轮一行结构化日志（v3「可靠性最小集」要求）。
 
     TODO-7: 用 logger 输出一行 **JSON**，至少含：
@@ -271,8 +349,7 @@ def _log_step(*, step: int, tool_calls: list[ToolCallRecord], prompt_tokens: int
             为什么要 JSON 而不是人话？—— 因为日志是给机器采的，L13 要拿它算
             P95 延迟、token 成本、工具调用分布。人话日志采不了。
     """
-    raise NotImplementedError("TODO-7")
-
+    logger.info(json.dumps(record, ensure_ascii=False))
 
 # ===========================================================================
 # 4) 手动跑一把（写完 TODO-1~7 后用这个验证）
@@ -282,7 +359,7 @@ if __name__ == "__main__":
 
     from openai import OpenAI
 
-    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    logging.basicConfig(level=logging.INFO, format="%(message)s").setLevel(logging.WARNING)
 
     SYSTEM_PROMPT = (
         "你是电商客服助手。需要订单信息时必须调用工具查询，绝不编造。"

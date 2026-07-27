@@ -158,7 +158,11 @@ def test_tool_then_final_answer():
     #   ① stop_reason 是什么
     #   ② steps 是几（想清楚：一次"调工具"算不算一步？你 LoopGuard 里怎么定义的？）
     #   ③ total_prompt_tokens 应该是多少（提示：**两轮都要算**，别只算最后一轮）
-    raise NotImplementedError("TODO-T1")
+    assert result.stop_reason is StopReason.FINAL_ANSWER
+    assert result.final_answer == "A123 正在运输中。"
+    assert result.steps == 2
+    assert result.total_prompt_tokens == 200 + 350
+    assert len(client.calls) == 2
 
 
 # ===========================================================================
@@ -183,7 +187,11 @@ def test_max_steps_exceeded():
 
     # TODO-T2: 补断言。除了 stop_reason，**还要断言 final_answer 是什么** ——
     #          这是本节的核心：被迫结束时上层拿到的是什么？想清楚再写。
-    raise NotImplementedError("TODO-T2")
+    assert result.stop_reason is StopReason.MAX_STEPS
+    assert result.final_answer == None
+    assert result.steps == 3
+    assert result.total_prompt_tokens == 100 + 200 + 300
+    assert len(client.calls) == 3
 
 
 def test_no_progress_detected():
@@ -199,7 +207,10 @@ def test_no_progress_detected():
     # TODO-T3: 补断言。除了 stop_reason，**还要断言 steps** ——
     #          验证它确实是在第 3 轮左右停的，而不是跑到 20 才停。
     #          （如果只断言 stop_reason，检测阈值写错成 10 你也发现不了。）
-    raise NotImplementedError("TODO-T3")
+    assert result.stop_reason is StopReason.NO_PROGRESS
+    assert result.steps == 3
+    assert result.total_prompt_tokens == 150 * 3
+    assert len(client.calls) == 3
 
 
 def test_tool_fatal_stops_immediately():
@@ -220,7 +231,10 @@ def test_tool_fatal_stops_immediately():
     # TODO-T4: 补断言。**最关键的一条**：断言 client 只被调用了 1 次 ——
     #          证明 fatal 之后没有再去问模型（否则就是在白烧钱）。
     #          提示：len(client.calls)
-    raise NotImplementedError("TODO-T4")
+    assert result.stop_reason is StopReason.TOOL_FATAL
+    assert result.steps == 1
+    assert result.total_prompt_tokens == 200
+    assert len(client.calls) == 1
 
 
 def test_budget_exceeded():
@@ -237,7 +251,11 @@ def test_budget_exceeded():
     result = run(client, make_guard(max_steps=99, no_progress_threshold=99, max_prompt_tokens=9_000))
 
     # TODO-T5: 补断言。
-    raise NotImplementedError("TODO-T5")
+    assert result.stop_reason is StopReason.BUDGET_EXCEEDED
+    assert result.final_answer == None
+    assert result.steps == 3
+    assert result.total_prompt_tokens == 4_000 * 3
+    assert len(client.calls) == 3
 
 
 # ===========================================================================
@@ -259,7 +277,11 @@ def test_content_none_is_handled():
     #   两种都是合理设计，**选一个、在注释里写理由、然后让实现和断言对齐**。
     #   唯一不可接受的是：final_answer 是 None 而 stop_reason 是 FINAL_ANSWER
     #   —— 那上层会把 None 直接发给用户。
-    raise NotImplementedError("TODO-T6")
+    assert result.stop_reason is StopReason.FINAL_ANSWER
+    assert result.final_answer == ""
+    assert result.steps == 1
+    assert result.total_prompt_tokens == 100
+    assert len(client.calls) == 1
 
 
 # ===========================================================================
@@ -273,7 +295,10 @@ def test_execute_tool_invalid_json():
     #   ① fatal 应该是什么（模型能自愈吗？）
     #   ② result 必须是**字符串**且能被 json.loads 解析出 error 字段
     #      —— 硬约束：每个 tool_call_id 必须有且仅有一条对应回复，所以任何路径都要返回字符串。
-    raise NotImplementedError("TODO-T7")
+    assert fatal is False
+    error_obj = json.loads(result)
+    assert "error" in error_obj
+    assert isinstance(error_obj["error"], str)
 
 
 def test_execute_tool_unknown_tool_name():
@@ -282,7 +307,10 @@ def test_execute_tool_unknown_tool_name():
 
     # TODO-T8: 补断言。想清楚：这算业务错误还是致命错误？
     #          （提示：把"没有这个工具"回传给模型，它有没有可能换个工具重来？）
-    raise NotImplementedError("TODO-T8")
+    assert fatal is False
+    error_obj = json.loads(result)
+    assert "error" in error_obj
+    assert isinstance(error_obj["error"], str)
 
 
 # ===========================================================================
@@ -305,7 +333,10 @@ def test_parallel_groups_basic():
 
     # TODO-T9: 补断言。注意 s2/s3 的**顺序不该被要求** —— 用 set 比较，
     #          否则你的测试会依赖实现的遍历顺序（脆弱测试）。
-    raise NotImplementedError("TODO-T9")
+    assert len(groups) == 3
+    assert groups[0] == {"s1"}
+    assert set(groups[1]) == {"s2", "s3"}
+    assert groups[2] == {"s4"}
 
 
 def test_parallel_groups_detects_cycle():
@@ -321,4 +352,5 @@ def test_parallel_groups_detects_cycle():
 
     # TODO-T10: 补断言。你在 planner.py TODO-2 里决定了"撞到环怎么办"，
     #           这里按那个决定断言（抛异常就用 pytest.raises，返回空就断言返回值）。
-    raise NotImplementedError("TODO-T10")
+    with pytest.raises(ValueError):
+        parallel_groups(plan)
