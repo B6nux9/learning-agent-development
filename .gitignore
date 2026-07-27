@@ -14,3 +14,6 @@ chroma_db/
 
 # uv:虚拟环境不入库;pyproject.toml + uv.lock + .python-version 要入库(双机复现)
 .venv/
+
+# 源码锚点浅克隆仓库(v3 三·补一),只读参考,不入库
+reference/repos/
