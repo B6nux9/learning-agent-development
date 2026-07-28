@@ -10,7 +10,7 @@
 - 路径：**分级(tiered)**
 - 目标终点等级：**Advanced（第 4 级）** —— 能独立设计并搭出 production 级客服 agent，
   懂每个组件的权衡，在面试里讲透细节。不追 Expert。
-- 起始日期 / 最近更新：2026-07-13 / 2026-07-27（**L8 封版 + smolagents 锚点完成 + 阶段二 capstone 设计面两轮通过**）
+- 起始日期 / 最近更新：2026-07-13 / 2026-07-28（**阶段二 capstone 第三轮 build 第一次坐下：盖完 4 块、端到端 4 场景跑绿**）
 - 默认模型：**DeepSeek**（`deepseek-chat`，OpenAI 兼容，写法可迁移通义千问/GPT）
 - 环境：conda 环境 `agent`，Python 3.12
 - 仓库（**用户在两台机器上学，按当前系统判断路径**）：
@@ -96,7 +96,7 @@
       summary.pdf 出好 · interview-notes 补齐。门禁三条全满足。详见文末「L8 封版记录」。
 - [x] **smolagents CodeAgent 锚点** —— 已完成（三引导问题全答透，三栏笔记 `anchor-notes/L8-smolagents.md` 已落笔，
       第③栏已摘进 interview-notes）。用户吃透「JSON tool-calling vs CodeAct」两范式取舍。
-- [~] 🎯 **阶段二 capstone（用户主动提前开工）** —— **设计面两轮已通过**（见下方「阶段二 capstone 进度」）　← **当前断点**
+- [~] 🎯 **阶段二 capstone（用户主动提前开工）** —— 设计面两轮通过 + **第三轮 build 盖完 4 块跑绿**（见下方「阶段二 capstone 进度」）　← **当前断点**
 - [ ] **L9 主流框架：用 LangChain 重写项目** ——（JD 6/10，**从 L14 大幅前移**；简历关键词。capstone 裸 SDK 版做完后进）
       （v3 L9 改法：同一有界工作流用裸 SDK vs LangGraph 两版对比 → 产出 ADR）
 - [ ] **L10 MCP 协议** ——（JD 4/10，**新增**；2025-26 热点，面试常问）
@@ -342,10 +342,25 @@ L8 作业早已封版；2026-07-27（本 session）又按新教学法补做了�
   ② 关键词路由脆弱（L4/L7 已证），弃用，改模型意图分类；
   ③ RAG 永远返回东西 → 用相似度阈值判"没覆盖"转人工，**阈值从 L7 评估集标定**；
   ④ 上下文杀手是 RAG 检索载荷不是对话轮数，控法是检索更准+压 top-k，**不 summarize 政策原文**。
-- **⭐ 明天从这里开始 —— 第三轮：动手搭（带着盖楼）**：
-  由**教练切第一刀**（定文件蓝图 + 第一条最小可跑链路，建议从"查订单"纵切），用户从空文件带着写；
+- **第三轮：动手搭（带着盖楼）—— 进行中，2026-07-28 第一次坐下**：
+  由**教练切第一刀**（定文件蓝图 + 第一条最小可跑链路，从"查订单"纵切），用户从空文件带着写；
   纵切打通再逐层加厚（退款阈值→RAG→转人工）。门禁三条 + 复用 L7 `eval/`、L5 记忆、L6 预算、L8 三类分流。
   ⚠️ 严守「带着盖楼」四约束（单文件为主、TODO≤~10–12、不跨文件链式依赖、蓝图先行纵切早反馈）。
+
+  **代码在 `capstones/stage2-customer-service-agent/`（tools.py / agent.py / main.py）。已盖完 4 块，端到端 4 场景跑绿：**
+  - block 1 `query_order`：归属校验（存在/forbidden/not_found 三分），出口白名单塑形。
+  - block 2 `dispatch`：注入落地——user_id 用会话注入值、order_id 取模型 args，两道防线。
+  - block 3 `run()`：把「两段式」升级成真 while-loop + `LoopGuard`（max_steps=8 精确、真实 `usage.prompt_tokens` 闸门）。
+  - block 4 `process_refund`：**招牌菜**——复用 query_order 拿归属+真实金额，阈值 `REFUND_AUTO_LIMIT=200` hard-code、幂等防重复退、超阈值 `needs_human`。schema/dispatch/SYSTEM_PROMPT 已接。
+  - 验证：查订单正常/越权收敛/退 A123(¥199)自动退/退 D999(¥699)转人工不承诺。三条面试金句已进 `interview-notes.md`「动手实现沉淀」。
+  - **模型名**：用户环境用 `deepseek-v4-flash`（存在，教练知识过时；跑通即证）。key 在 `deepseek_api.txt`（gitignore）或 env。
+
+  **⭐ 下次坐下从这里接（第三轮未完，按优先级）**：
+  ① **门禁第二条 pytest**：写 `test_agent.py`，至少 1 正 1 反——**这次让用户自己写测试**（L6 遗留：v2 测试是教练代写的，capstone 要补上系统学单测）。可先覆盖 tools 层（query_order/process_refund 纯逻辑，不打 API）。
+  ② **RAG 政策答疑**（`ask_policy` 分支）：复用 L7 `rag.py` + `eval/`；相似度阈值判"没覆盖"转人工，阈值从评估集标定；只此分支走向量库省钱。
+  ③ **真 `escalate_to_human` 工具**（现在转人工是纯 prompt 驱动的简化，无工单无终止 loop）：做成可审计、能终止循环的显式工具。
+  ④ **意图路由**（LLM-as-router + 结构化输出，L6 缺口2）：目前靠 tool-calling 隐式分流，DESIGN ① 要的是显式 `intent` 枚举分类——是否要显式化，下次和用户确认（现状够用则可留作 L9 对比素材）。
+  ⚠️ 严守「带着盖楼」：每块先给接口契约、用户从空函数体写；教练只接线不替填实现。
 
 ## 下一步（给下个 session 的明确指令）
 - **开局顺序**：①`git pull` ②读本文件（**尤其正上方「阶段二 capstone 进度」+「L8 封版记录」**）
