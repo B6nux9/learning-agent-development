@@ -355,11 +355,15 @@ L8 作业早已封版；2026-07-27（本 session）又按新教学法补做了�
   - 验证：查订单正常/越权收敛/退 A123(¥199)自动退/退 D999(¥699)转人工不承诺。三条面试金句已进 `interview-notes.md`「动手实现沉淀」。
   - **模型名**：用户环境用 `deepseek-v4-flash`（存在，教练知识过时；跑通即证）。key 在 `deepseek_api.txt`（gitignore）或 env。
 
+  - block 5 ✅ **门禁第二条 pytest**（`test_tools.py`，6 条全绿，**用户自己写**）：query_order 正+两反、
+    process_refund 正+超阈值+幂等；教了「空测试=假绿/red-green」「测试隔离(autouse fixture 清 `_REFUNDS`)」
+    「先测纯逻辑层、碰网络用 test double」。**还了 L6「测试教练代写」的债**。三条金句已进 interview-notes。
+
   **⭐ 下次坐下从这里接（第三轮未完，按优先级）**：
-  ① **门禁第二条 pytest**：写 `test_agent.py`，至少 1 正 1 反——**这次让用户自己写测试**（L6 遗留：v2 测试是教练代写的，capstone 要补上系统学单测）。可先覆盖 tools 层（query_order/process_refund 纯逻辑，不打 API）。
-  ② **RAG 政策答疑**（`ask_policy` 分支）：复用 L7 `rag.py` + `eval/`；相似度阈值判"没覆盖"转人工，阈值从评估集标定；只此分支走向量库省钱。
-  ③ **真 `escalate_to_human` 工具**（现在转人工是纯 prompt 驱动的简化，无工单无终止 loop）：做成可审计、能终止循环的显式工具。
-  ④ **意图路由**（LLM-as-router + 结构化输出，L6 缺口2）：目前靠 tool-calling 隐式分流，DESIGN ① 要的是显式 `intent` 枚举分类——是否要显式化，下次和用户确认（现状够用则可留作 L9 对比素材）。
+  ① **RAG 政策答疑**（`ask_policy` 分支）：复用 L7 `rag.py` + `eval/`；相似度阈值判"没覆盖"转人工，阈值从评估集标定；只此分支走向量库省钱。
+  ② **真 `escalate_to_human` 工具**（现在转人工是纯 prompt 驱动的简化，无工单无终止 loop）：做成可审计、能终止循环的显式工具。
+  ③ **意图路由**（LLM-as-router + 结构化输出，L6 缺口2）：目前靠 tool-calling 隐式分流，DESIGN ① 要的是显式 `intent` 枚举分类——是否要显式化，下次和用户确认（现状够用则可留作 L9 对比素材）。
+  ④ **（可选补测）** dispatch 的注入防御测试（args 塞 user_id 被忽略仍 forbidden）——高价值小测，招牌卖点值得有测试背书。
   ⚠️ 严守「带着盖楼」：每块先给接口契约、用户从空函数体写；教练只接线不替填实现。
 
 ## 下一步（给下个 session 的明确指令）
