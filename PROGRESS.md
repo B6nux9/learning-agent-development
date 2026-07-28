@@ -360,7 +360,15 @@ L8 作业早已封版；2026-07-27（本 session）又按新教学法补做了�
     「先测纯逻辑层、碰网络用 test double」。**还了 L6「测试教练代写」的债**。三条金句已进 interview-notes。
 
   **⭐ 下次坐下从这里接（第三轮未完，按优先级）**：
-  ① **RAG 政策答疑**（`ask_policy` 分支）：复用 L7 `rag.py` + `eval/`；相似度阈值判"没覆盖"转人工，阈值从评估集标定；只此分支走向量库省钱。
+  ① **RAG 政策答疑**（`ask_policy` 分支）——**进行中，sit 1 已开工（换机中断）**：
+     - `capstones/stage2-customer-service-agent/policy_rag.py` 脚手架已建：基建全给（两 client、`POLICY_KB`、
+       `_embed`/`_build_index`/`_grounded_answer`、`__main__` 探针打印真实距离）。
+     - **⛳ 用户下一步动作：写 `search_policy()`（现在是 `raise NotImplementedError`）**——契约在 docstring：
+       检索拿 `res["distances"][0][0]` → 阈值闸（>`POLICY_DISTANCE_THRESHOLD` 判 `not_covered` 转人工）→ 覆盖则 `_grounded_answer` 生成。
+     - 写完 `uv run python .../policy_rag.py`（**需 `OPENAI_API_KEY` 做 embedding**，DeepSeek 端点无 embedding）看 4 行探针距离，
+       **照真实数字把 `POLICY_DISTANCE_THRESHOLD` 定在「覆盖(小)」与「不覆盖(大)」之间**（"阈值从数据标定不靠猜"的现场版）。
+     - sit 2：用 `eval/` 评估集正经标定（normal vs unanswerable 距离分布）+ 把 `search_policy` 接进 agent 当 `ask_policy` 工具（加 TOOLS schema + dispatch 路由，跟 query_order 一个模式）。
+     - ⚠️ 教学法：严守「带着盖楼」，只给契约、用户写函数体；这是重头戏块（RAG=JD 8/10 最高频），预算大、拆 2 次坐下。
   ② **真 `escalate_to_human` 工具**（现在转人工是纯 prompt 驱动的简化，无工单无终止 loop）：做成可审计、能终止循环的显式工具。
   ③ **意图路由**（LLM-as-router + 结构化输出，L6 缺口2）：目前靠 tool-calling 隐式分流，DESIGN ① 要的是显式 `intent` 枚举分类——是否要显式化，下次和用户确认（现状够用则可留作 L9 对比素材）。
   ④ **（可选补测）** dispatch 的注入防御测试（args 塞 user_id 被忽略仍 forbidden）——高价值小测，招牌卖点值得有测试背书。
