@@ -9,6 +9,7 @@
 - **节奏**：每周 5–10 小时，边做边讲。
 
 > 📍 **实时进度、断点、下一步以 [PROGRESS.md](PROGRESS.md) 为准**（跨机交接文件）。本 README 是相对静态的总览。
+> 🗺️ **全景路线图（我在哪 / 下一步 / 每项从哪学）见 [ROADMAP.md](ROADMAP.md)**。
 
 ## 五级阶梯
 
@@ -83,6 +84,7 @@
 learning-agent-development/
 ├── PROGRESS.md              # 跨机交接：进度 + 画像 + 下一步（权威，续学先读）
 ├── README.md                # 本文件：静态总览
+├── ROADMAP.md               # 全景路线图（大纲 + 当前位置 + 每项来源：JD 计划 / 对标书）
 ├── COURSE-OVERVIEW-v3.md    # 课程设计说明（两轨制，当前权威设计版）
 ├── interview-notes.md       # 面试素材本（按「面试官会怎么问」组织）
 ├── resources.md             # 精选信息渠道
