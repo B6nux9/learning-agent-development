@@ -48,7 +48,7 @@ def _patch_seams(monkeypatch, *, distance: float, doc: str = "退货政策：签
 # 正例 —— 我给你写全当模板：距离 < 阈值 → 放行生成
 # ===========================================================================
 def test_search_policy_covered_returns_answer(monkeypatch):
-    # Arrange：距离 0.5 < 阈值 0.9 → 应判「覆盖」，走生成分支
+    # Arrange：距离 0.5 < 阈值 1.15 → 应判「覆盖」，走生成分支
     _patch_seams(monkeypatch, distance=0.5)
     # Act
     result = policy_rag.search_policy("怎么退货")
@@ -61,7 +61,7 @@ def test_search_policy_covered_returns_answer(monkeypatch):
 # 反例① —— 你来写：距离 > 阈值 → not_covered，不生成
 # ===========================================================================
 def test_search_policy_not_covered_escalates(monkeypatch):
-    """契约：距离 1.5 > 阈值 0.9 → 返回 {"ok": False, "reason": "not_covered"}。
+    """契约：距离 1.5 > 阈值 1.15 → 返回 {"ok": False, "reason": "not_covered"}。
     照上面模板：先 _patch_seams(distance=1.5)，再调 search_policy，再断言 ok / reason。
     """
     # TODO(你来写): Arrange 用 distance=1.5；Act 调 search_policy；Assert ok=False + reason

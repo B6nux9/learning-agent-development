@@ -86,8 +86,9 @@ def _grounded_answer(question: str, chunks: list[str]) -> str:
 
 
 
-# 命中组实测 0.81/0.85，未覆盖组 1.45/1.60，取 0.9 偏严侧防幻觉；sit2 用 eval 集正经标定。
-POLICY_DISTANCE_THRESHOLD = 0.9  # TODO(sit2 标定): 用 eval 集看 normal vs unanswerable 距离分布再定
+# 阈值标定(eval 13 条分布, 见 calibrate_threshold.py): normal 0.78–1.09 / unanswerable 1.34–1.52，
+# 沟(1.09,1.34)取 1.15 偏严侧防幻觉(旧值 0.9 会误踢 0.914/1.041/1.090 三条正例)；生产按误判率回调。
+POLICY_DISTANCE_THRESHOLD = 1.15
 
 
 

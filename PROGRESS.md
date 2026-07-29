@@ -371,9 +371,14 @@ L8 作业早已封版；2026-07-27（本 session）又按新教学法补做了�
     ② `monkeypatch` 换三接缝 + 自动还原；③ "绿≠对"照妖镜"拔网线还能过吗"（用户漏 `_patch_seams` 那条偷打 3s 网络，已修）；
     ④ 行为验证 `_boom`（断言 not_covered 时不该调 `_grounded_answer`）。四连招已进 interview-notes「mock 深水区」。
 
-  **⭐ 下次坐下从这里接（第三轮剩余，按优先级）**：
-  ① **用 `eval/` 评估集正经标定阈值**（替掉今天 4 点拍的 0.9）：跑 normal vs unanswerable 两整组的**距离分布**，看重叠区再定，
-     precision/recall 权衡。这是 sit 3 的重头，预算大、单独坐下。（今天的 0.9 是玩具规模运气分得开，真 40 页政策会重叠。）
+  **✅ sit 3 ① 阈值标定已完成（2026-07-29）**：新建 `calibrate_threshold.py`（复用 policy_rag 索引，
+     对 eval 13 条=9 normal+4 unanswerable 算 top-1 距离分布）。结果**有干净的沟**：normal 0.78–1.09 / unanswerable 1.34–1.52，
+     沟(1.09,1.34)。**关键教训**：4 点拍的旧值 0.9 会误踢 3 条正例（0.914/1.041/1.090，normal 长尾）→"少量样本漏长尾把阈值定错"。
+     **`POLICY_DISTANCE_THRESHOLD` 已改 0.9→1.15**（偏严防幻觉、不贴沟留正例余量；生产按误判率回调）。test_policy 注释同步更新，9 绿。
+     用户高光：自己提出**三档 confidence-band 路由**（沟里加 ask_for_clarification 让用户 rephrase→重检索），并自己点出隐私风险——
+     已存 DESIGN「未来增强」+ interview-notes「设计谈资」（senior 级降级路径设计，留作可选实现 / LangGraph conditional edge 对比）。
+
+  **⭐ 下次坐下从这里接（第三轮剩余，封版前）**：
   ② **真 `escalate_to_human` 工具**（现在转人工是纯 prompt 驱动的简化，无工单无终止 loop）：做成可审计、能终止循环的显式工具。
   ③ **意图路由**（LLM-as-router + 结构化输出，L6 缺口2）：目前靠 tool-calling 隐式分流，DESIGN ① 要的是显式 `intent` 枚举分类——是否要显式化，下次和用户确认（现状够用则可留作 L9 对比素材）。
   ④ **（可选补测）** dispatch 的注入防御测试（args 塞 user_id 被忽略仍 forbidden）——高价值小测，招牌卖点值得有测试背书。
