@@ -393,7 +393,13 @@ L8 作业早已封版；2026-07-27（本 session）又按新教学法补做了�
   **🎉 阶段二 capstone 裸 SDK 版 = 封版（2026-07-29）**。文件：tools/agent/main/policy_rag/calibrate_threshold + test_tools/test_policy。
   能答三类（查订单/退款/政策答疑），三道安全线（越权注入/退款阈值 hard-code/RAG 幻觉阈值），转人工=可审计工单+终止 loop。
 
-  **⭐ 下次：进 L9 LangChain**（用户已明确"往封版走→进 LangChain"）。v3 打法：**同一有界工作流裸 SDK vs LangGraph 两版对比 → ADR**。
+  **📚 对标教程已引入（2026-07-29，用户找来）**：`reference/repos/ai-agent-book/`（bojieli，10 章/93 项目/中文优先，
+  已浅克隆 gitignore；`chapter1-10/`=项目，`book/`=中文讲义）。**整合策略=用户拍板「当参照脊柱、按主题精读」**（不照搬替换 JD 大纲）：
+  - 书↔课程映射（到重合主题就精读对应章+跑项目）：**L10 MCP←Ch4 · L12 评估←Ch6(GAIA/SWE-bench/TAU2/OSWorld) · L11 多智能体←Ch10 · KV Cache←Ch2**。
+  - **书没有、继续按 JD 走**：**L9 LangChain/框架、L13 可观测·成本·延迟·重试限流、L14 部署** —— 社招硬需求，书缺（研究者写书重理解、企业招人重落地）。
+  - 书 Ch5 Coding/Ch7 后训练/Ch8 持续进化/Ch9 多模态 = 研究向加分项 → **长期作战**，第一轮投递不碰。判据不变：二八 + 社招过滤器。
+
+  **⭐ 下次：进 L9 LangChain**（用户已明确"往封版走→进 LangChain"；书不覆盖框架，按 JD 走）。v3 打法：**同一有界工作流裸 SDK vs LangGraph 两版对比 → ADR**。
   裸 SDK 版就是这个 capstone，现成的对照组。
   **封版后仍可选做（不挡 L9，随时回补）**：
   ③ **显式意图路由**（LLM-as-router + 结构化输出枚举 intent）：现状 tool-calling 隐式分流够用，正好留作 L9 裸 SDK vs LangGraph 对比素材。
