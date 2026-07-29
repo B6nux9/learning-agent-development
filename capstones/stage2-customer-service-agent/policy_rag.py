@@ -60,7 +60,13 @@ def _build_index() -> chromadb.Collection:
     return col
 
 
-_COLLECTION = _build_index()  # import 时建一次
+_COLLECTION: chromadb.Collection | None = None
+
+def _get_collection() -> chromadb.Collection:
+    global _COLLECTION
+    if _COLLECTION is None:
+        _COLLECTION = _build_index()
+    return _COLLECTION
 
 
 # ── grounding 生成（复用 L7 的强约束 prompt，我给你，直接调）──
@@ -79,8 +85,10 @@ def _grounded_answer(question: str, chunks: list[str]) -> str:
     return resp.choices[0].message.content.strip()
 
 
-# ── 阈值（先占位；今天跑完看真实距离再定，别信这个默认值）──
-POLICY_DISTANCE_THRESHOLD = 1.0  # TODO(sit2 标定): 用 eval 集看 normal vs unanswerable 距离分布再定
+
+# 命中组实测 0.81/0.85，未覆盖组 1.45/1.60，取 0.9 偏严侧防幻觉；sit2 用 eval 集正经标定。
+POLICY_DISTANCE_THRESHOLD = 0.9  # TODO(sit2 标定): 用 eval 集看 normal vs unanswerable 距离分布再定
+
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -99,9 +107,14 @@ def search_policy(question: str) -> dict:
       3. 覆盖了（距离 ≤ 阈值）→ 用检索到的 chunk 调 _grounded_answer 生成，
          return {"ok": True, "answer": 生成文本}。
     """
-    # TODO(你来写): 按契约实现
-    raise NotImplementedError
+    qvec = _embed([question])[0]
+    res = _get_collection().query(query_embeddings=[qvec], n_results=1)
+    
+    distance = res["distances"][0][0]
+    if distance > POLICY_DISTANCE_THRESHOLD:
+        return {"ok": False, "reason": "not_covered"}
 
+    return {"ok": True, "answer": _grounded_answer(question, [res["documents"][0][0]])}
 
 # ── 跑起来看真实距离（今天的标定素材）──
 if __name__ == "__main__":
@@ -113,7 +126,8 @@ if __name__ == "__main__":
     ]
     for q in probes:
         qvec = _embed([q])[0]
-        res = _COLLECTION.query(query_embeddings=[qvec], n_results=1)
+        res = _get_collection().query(query_embeddings=[qvec], n_results=1)
         dist = res["distances"][0][0]
         doc = res["documents"][0][0]
+        print(search_policy(q))
         print(f"[{dist:.3f}] 问「{q}」→ 最近政策：{doc[:20]}…")

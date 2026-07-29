@@ -20,6 +20,7 @@ from pathlib import Path
 from openai import OpenAI
 
 from tools import process_refund, query_order
+from policy_rag import search_policy
 
 
 # --------------------------------------------------------------------------
@@ -40,7 +41,8 @@ SYSTEM_PROMPT = (
     "- order_not_found / forbidden：统一回复「没查到这笔订单哦～」，不解释原因。\n"
     "- refunded：告知已退款成功及金额。\n"
     "- needs_human：致歉并说明这笔需人工审核、已为其转接人工，不要承诺退款结果。\n"
-    "- already_refunded：告知该订单已退过款，无需重复申请。"
+    "- already_refunded：告知该订单已退过款，无需重复申请。\n"
+    "- not_covered：告知「政策没覆盖」并转人工，不要硬答。\n"
 )
 
 
@@ -79,6 +81,20 @@ TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_policy",
+            "description": "查询平台政策。用户问售后政策时调用。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "question": {"type": "string", "description": "用户的政策问题，如「退货运费谁承担？」"},
+                },
+                "required": ["question"],
+            },
+        }
+    }
 ]
 
 
@@ -106,6 +122,8 @@ def dispatch(tool_name: str, args: dict, session_user_id: str) -> dict:
     #   —— 跟上面一个模式：user_id 用 session_user_id（注入），order_id 取 args。
     if tool_name == "process_refund":
         return process_refund(session_user_id, args["order_id"])
+    if tool_name == "search_policy":
+        return search_policy(args["question"])
     return {"ok": False, "reason": "unknown_tool"}
 
 

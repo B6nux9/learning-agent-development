@@ -359,16 +359,21 @@ L8 作业早已封版；2026-07-27（本 session）又按新教学法补做了�
     process_refund 正+超阈值+幂等；教了「空测试=假绿/red-green」「测试隔离(autouse fixture 清 `_REFUNDS`)」
     「先测纯逻辑层、碰网络用 test double」。**还了 L6「测试教练代写」的债**。三条金句已进 interview-notes。
 
-  **⭐ 下次坐下从这里接（第三轮未完，按优先级）**：
-  ① **RAG 政策答疑**（`ask_policy` 分支）——**进行中，sit 1 已开工（换机中断）**：
-     - `capstones/stage2-customer-service-agent/policy_rag.py` 脚手架已建：基建全给（两 client、`POLICY_KB`、
-       `_embed`/`_build_index`/`_grounded_answer`、`__main__` 探针打印真实距离）。
-     - **⛳ 用户下一步动作：写 `search_policy()`（现在是 `raise NotImplementedError`）**——契约在 docstring：
-       检索拿 `res["distances"][0][0]` → 阈值闸（>`POLICY_DISTANCE_THRESHOLD` 判 `not_covered` 转人工）→ 覆盖则 `_grounded_answer` 生成。
-     - 写完 `uv run python .../policy_rag.py`（**需 `OPENAI_API_KEY` 做 embedding**，DeepSeek 端点无 embedding）看 4 行探针距离，
-       **照真实数字把 `POLICY_DISTANCE_THRESHOLD` 定在「覆盖(小)」与「不覆盖(大)」之间**（"阈值从数据标定不靠猜"的现场版）。
-     - sit 2：用 `eval/` 评估集正经标定（normal vs unanswerable 距离分布）+ 把 `search_policy` 接进 agent 当 `ask_policy` 工具（加 TOOLS schema + dispatch 路由，跟 query_order 一个模式）。
-     - ⚠️ 教学法：严守「带着盖楼」，只给契约、用户写函数体；这是重头戏块（RAG=JD 8/10 最高频），预算大、拆 2 次坐下。
+  **✅ RAG 政策答疑 sit 1 + sit 2（接线）已完成（2026-07-29 Windows）**：
+  - **sit 1**：`policy_rag.py` 的 `search_policy()` 用户已写（检索→距离阈值闸→覆盖则 grounded 生成，两分支都对）。
+    阈值 `POLICY_DISTANCE_THRESHOLD=0.9` **已按真实距离标定**（命中组 0.81/0.85 vs 未覆盖组 1.45/1.60，取 0.9 偏严侧防幻觉），
+    注释里留了标定证据。端到端 4 探针验过（覆盖答原文 / 不覆盖 not_covered）。
+  - **sit 2（接线）**：`search_policy` 已接进 `agent.py` 当工具——三处同步改齐（TOOLS schema + dispatch 路由 + SYSTEM_PROMPT 的 `not_covered` 话术），
+    import 也加了。`main.py` 端到端 6 场景全绿（查订单/越权/退款自动/退款转人工/**政策答原文/政策不覆盖转人工**）。
+    ⚠️ 注意：`search_policy` 的 dispatch 路由**不注入 user_id**（政策是共享知识、无主，判据"按用户隔离才上锁"，用户已答透）。
+  - **门禁第二条（测试）已补**：新建 `test_policy.py`，1 正 2 反共 3 条，全绿（连同 tools 6 条 = **9 passed**）。
+    **系统学了 mock/测试替身**（还了 L6「测试系统学习」的债）：① 惰性化 `_get_collection()` 消除 import 期 I/O（可测性核心功）；
+    ② `monkeypatch` 换三接缝 + 自动还原；③ "绿≠对"照妖镜"拔网线还能过吗"（用户漏 `_patch_seams` 那条偷打 3s 网络，已修）；
+    ④ 行为验证 `_boom`（断言 not_covered 时不该调 `_grounded_answer`）。四连招已进 interview-notes「mock 深水区」。
+
+  **⭐ 下次坐下从这里接（第三轮剩余，按优先级）**：
+  ① **用 `eval/` 评估集正经标定阈值**（替掉今天 4 点拍的 0.9）：跑 normal vs unanswerable 两整组的**距离分布**，看重叠区再定，
+     precision/recall 权衡。这是 sit 3 的重头，预算大、单独坐下。（今天的 0.9 是玩具规模运气分得开，真 40 页政策会重叠。）
   ② **真 `escalate_to_human` 工具**（现在转人工是纯 prompt 驱动的简化，无工单无终止 loop）：做成可审计、能终止循环的显式工具。
   ③ **意图路由**（LLM-as-router + 结构化输出，L6 缺口2）：目前靠 tool-calling 隐式分流，DESIGN ① 要的是显式 `intent` 枚举分类——是否要显式化，下次和用户确认（现状够用则可留作 L9 对比素材）。
   ④ **（可选补测）** dispatch 的注入防御测试（args 塞 user_id 被忽略仍 forbidden）——高价值小测，招牌卖点值得有测试背书。
