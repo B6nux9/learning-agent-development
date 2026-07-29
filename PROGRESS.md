@@ -378,11 +378,28 @@ L8 作业早已封版；2026-07-27（本 session）又按新教学法补做了�
      用户高光：自己提出**三档 confidence-band 路由**（沟里加 ask_for_clarification 让用户 rephrase→重检索），并自己点出隐私风险——
      已存 DESIGN「未来增强」+ interview-notes「设计谈资」（senior 级降级路径设计，留作可选实现 / LangGraph conditional edge 对比）。
 
-  **⭐ 下次坐下从这里接（第三轮剩余，封版前）**：
-  ② **真 `escalate_to_human` 工具**（现在转人工是纯 prompt 驱动的简化，无工单无终止 loop）：做成可审计、能终止循环的显式工具。
-  ③ **意图路由**（LLM-as-router + 结构化输出，L6 缺口2）：目前靠 tool-calling 隐式分流，DESIGN ① 要的是显式 `intent` 枚举分类——是否要显式化，下次和用户确认（现状够用则可留作 L9 对比素材）。
-  ④ **（可选补测）** dispatch 的注入防御测试（args 塞 user_id 被忽略仍 forbidden）——高价值小测，招牌卖点值得有测试背书。
-  ⚠️ 严守「带着盖楼」：每块先给接口契约、用户从空函数体写；教练只接线不替填实现。
+  **✅ sit 3 ② 真 escalate_to_human 工具已完成（2026-07-29）—— 裸 SDK 版封版**：
+     - `tools.py` 加 `escalate_to_human(user_id, reason, summary)`：生成工单号 `T{n:04d}`、落审计台账 `_TICKETS`、
+       返回 `{"ok":True,"terminal":True,"ticket_id":...}`。**terminal 是给 run() 的停机信号**。
+     - `agent.py` 接线四处：import + TOOLS schema(reason 用 enum + required) + dispatch 路由(注入 user_id) +
+       SYSTEM_PROMPT 改「needs_human/not_covered 去调 escalate 工具，别自己说话术」。
+     - **run() 加通用 terminal 检查**：dispatch 结果 `result.get("terminal")` 为真 → 直接 return `HANDOFF_REPLY`(带工单号)、
+       退出整个 loop（不 hardcode 工具名，L8"loop 读信号"回扣）。main.py 验：D999 超限→开 T0001 停机、双十一→T0002。
+     - 测试补 1 条（`test_escalate_to_human_records_ticket`：开单落账 + 工单连号 T0001/T0002，查物证台账）。
+       **踩坑**：`is "T0001"` vs `== `（is 比身份、== 比值；字符串运行时拼出=新对象；ruff F632）。fixture 拆成
+       `reset_refunds`/`reset_tickets` 两个 autouse（单一职责）。
+     - **门禁三条全过**：环境可复现 ✅ / 10 测试正反俱全 ✅ / **无残留**（清光全部 `你来写`/TODO/`我给你` 脚手架 + 硬编码 key 无 + print 均正当）。
+
+  **🎉 阶段二 capstone 裸 SDK 版 = 封版（2026-07-29）**。文件：tools/agent/main/policy_rag/calibrate_threshold + test_tools/test_policy。
+  能答三类（查订单/退款/政策答疑），三道安全线（越权注入/退款阈值 hard-code/RAG 幻觉阈值），转人工=可审计工单+终止 loop。
+
+  **⭐ 下次：进 L9 LangChain**（用户已明确"往封版走→进 LangChain"）。v3 打法：**同一有界工作流裸 SDK vs LangGraph 两版对比 → ADR**。
+  裸 SDK 版就是这个 capstone，现成的对照组。
+  **封版后仍可选做（不挡 L9，随时回补）**：
+  ③ **显式意图路由**（LLM-as-router + 结构化输出枚举 intent）：现状 tool-calling 隐式分流够用，正好留作 L9 裸 SDK vs LangGraph 对比素材。
+  ④ dispatch 注入防御测试（args 塞 user_id 仍 forbidden）——招牌卖点值得测试背书。
+  ⑤ 三档 confidence-band 澄清路由（见 DESIGN 未来增强）——LangGraph conditional edge 的绝佳对比素材。
+  ⑥ capstone README（给面试官翻 repo 用）+ summary.pdf——阶段三简历包装时做。
 
 ## 下一步（给下个 session 的明确指令）
 - **开局顺序**：①`git pull` ②读本文件（**尤其正上方「阶段二 capstone 进度」+「L8 封版记录」**）

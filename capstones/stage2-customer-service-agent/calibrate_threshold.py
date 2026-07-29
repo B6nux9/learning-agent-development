@@ -22,7 +22,7 @@ from policy_rag import _embed, _get_collection
 EVAL_PATH = Path(__file__).resolve().parents[2] / "eval" / "rag_eval_set.json"
 
 
-# ── 基建：读评估集，取出要标定的两组问题（我给你）──
+# ── 读评估集，取出要标定的两组问题 ──
 def load_questions() -> dict[str, list[str]]:
     cases = json.loads(EVAL_PATH.read_text(encoding="utf-8"))["cases"]
     groups: dict[str, list[str]] = {"normal": [], "unanswerable": []}
@@ -33,19 +33,17 @@ def load_questions() -> dict[str, list[str]]:
 
 
 # ══════════════════════════════════════════════════════════════════════
-# 你来写：给一组问题，逐题算它对 POLICY_KB 的 top-1 距离
+# distances_for —— 给一组问题，逐题算它对 POLICY_KB 的 top-1 距离
 # ══════════════════════════════════════════════════════════════════════
 def distances_for(questions: list[str]) -> list[float]:
     """对每个问题，embedding → chroma 查 top-1 → 取最近距离，收成一个 list。
 
-    接口契约（就是 __main__ 探针那段的升级版，你写过的形状）：
-      对每个 q：
+    每个 q：
         qvec = _embed([q])[0]
         res  = _get_collection().query(query_embeddings=[qvec], n_results=1)
         dist = res["distances"][0][0]
       把所有 dist 收进一个 list 返回（顺序无所谓，等下会排序）。
     """
-    # TODO(你来写): 按契约收集每个问题的 top-1 距离
     distances = []
     for q in questions:
         qvec = _embed([q])[0]
@@ -55,7 +53,7 @@ def distances_for(questions: list[str]) -> list[float]:
     return distances
 
 
-# ── 基建：把两组分布打印出来，标出「沟」（我给你）──
+# ── 把两组分布打印出来，标出「沟」 ──
 def _report(groups: dict[str, list[float]]) -> None:
     for name, ds in groups.items():
         ds_sorted = sorted(ds)

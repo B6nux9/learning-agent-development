@@ -1,7 +1,7 @@
 """
 政策答疑 RAG (policy_rag.py) —— capstone 的「答政策问题」能力。
 
-L7 的 RAG 三件套(embed→chroma→grounding 生成)我给你复用，本文件你只写一个**新**东西：
+复用 L7 的 RAG 三件套(embed→chroma→grounding 生成)，核心是：
   search_policy() —— 带**相似度阈值**的检索：政策没覆盖就转人工，而不是硬答（挡幻觉）。
 
 为什么要阈值：向量检索**永远返回最近的 chunk**，哪怕问题跟政策八竿子打不着。
@@ -34,7 +34,7 @@ EMBED_MODEL = "text-embedding-3-small"
 GEN_MODEL = "deepseek-v4-flash"
 
 
-# ── 政策知识库（我给你；真实项目是 MD/PDF ~40页，这里给几条够演示阈值）──
+# ── 政策知识库（真实项目是 MD/PDF ~40页，这里几条够演示阈值）──
 POLICY_KB = [
     "退货政策：签收后 7 天内无理由退货，商品需保持完好、不影响二次销售。",
     "退款到账：退款审核通过后原路退回，支付宝/微信 1-3 个工作日，银行卡 3-7 个工作日。",
@@ -69,7 +69,7 @@ def _get_collection() -> chromadb.Collection:
     return _COLLECTION
 
 
-# ── grounding 生成（复用 L7 的强约束 prompt，我给你，直接调）──
+# ── grounding 生成（复用 L7 的强约束 prompt）──
 def _grounded_answer(question: str, chunks: list[str]) -> str:
     system_prompt = (
         "你是电商客服助手。严格只依据下面提供的【资料】回答；"
@@ -93,7 +93,7 @@ POLICY_DISTANCE_THRESHOLD = 1.15
 
 
 # ══════════════════════════════════════════════════════════════════════
-# block 6 —— 你来写：search_policy（带阈值的检索，今天唯一的新东西）
+# search_policy —— 带相似度阈值的检索（覆盖不足转人工，挡幻觉）
 # ══════════════════════════════════════════════════════════════════════
 def search_policy(question: str) -> dict:
     """答政策问题，用相似度阈值挡幻觉。

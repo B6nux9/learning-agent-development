@@ -19,8 +19,9 @@
 │ 打通看到它转起来，再逐层加厚 (退款阈值 → RAG → 转人工)。              │
 └─────────────────────────────────────────────────────────────────────┘
 
-本文件今天的任务：只写 query_order 一个函数 (block 1)。
-数据(FAKE_ORDERS)我给你，你不用管；把精力放在**归属校验**这个设计要点上。
+工具层：query_order（归属校验）/ process_refund（高危写，阈值 hard-code）/
+escalate_to_human（转人工，开审计工单 + 停机信号）。
+纪律：user_id 由代码从会话注入，绝不接受模型给的 id。
 """
 
 from __future__ import annotations
@@ -39,7 +40,7 @@ FAKE_ORDERS = {
 
 
 # --------------------------------------------------------------------------
-# block 1 —— 你来写：query_order
+# query_order —— 查订单（含归属校验）
 # --------------------------------------------------------------------------
 def query_order(user_id: str, order_id: str) -> dict:
     """查一笔订单。
@@ -57,7 +58,6 @@ def query_order(user_id: str, order_id: str) -> dict:
         2. 「不存在」和「不属于本人」要分成两个不同 reason
            —— 想想为什么不能合并成一个？(面试追问，写完回答我)
     """
-    # TODO(你来写): 按上面契约实现
     order = FAKE_ORDERS.get(order_id)
     if order is None:
       return {"ok": False, "reason": "order_not_found"}
@@ -67,7 +67,7 @@ def query_order(user_id: str, order_id: str) -> dict:
 
 
 # --------------------------------------------------------------------------
-# block 4 —— 你来写：process_refund（高危写操作，招牌菜）
+# process_refund —— 发起退款（高危写操作，阈值 hard-code）
 # --------------------------------------------------------------------------
 REFUND_AUTO_LIMIT = 200.0  # 阈值 hard-code 在代码，不让 LLM 判（可靠性来自约束）
 
@@ -93,7 +93,6 @@ def process_refund(user_id: str, order_id: str) -> dict:
         5. 放行：记账 _REFUNDS[order_id] = amount，返回 {"ok": True, "refunded": amount}。
       面试追问（写完答我）：第 4 步为什么必须是代码里的 if，而不是写进 SYSTEM_PROMPT 让模型「注意别退超 200」？
     """
-    # TODO(你来写): 按契约实现
     order = query_order(user_id, order_id)
     if not order["ok"]:
       return order
@@ -104,3 +103,24 @@ def process_refund(user_id: str, order_id: str) -> dict:
       return {"ok": False, "reason": "needs_human", "amount": amount}
     _REFUNDS[order_id] = amount
     return {"ok": True, "refunded": amount}
+
+# 工单台账（真实项目里是数据库/工单系统；这里内存版，能审计能测就够）
+_TICKETS: list[dict] = []
+
+def escalate_to_human(user_id: str, reason: str, summary: str) -> dict:
+    """转人工：开一条审计工单，并给出终止 loop 的信号。
+
+    输入
+      user_id : str  —— 会话注入（跟别的工具一样锁来源）
+      reason  : str  —— 为什么转（如 "over_refund_limit"/"policy_not_covered"/"user_request"）
+      summary : str  —— 模型给的一句话问题摘要，给人工看的
+    要做
+      1. 生成一个工单号 ticket_id —— 用计数器式 f"T{len(_TICKETS)+1:04d}"（可预测，好测）。
+      2. 把工单 append 进 _TICKETS：至少含 ticket_id / user_id / reason / summary。
+         （先不加时间戳——真实要加 time.time()，但会让测试不确定，等测试写完再加也行。）
+      3. 返回 {"ok": True, "terminal": True, "ticket_id": ticket_id, "reason": reason}。
+         **terminal:True 是给 run() 读的停机信号**，别漏。
+    """
+    ticket_id = f"T{len(_TICKETS)+1:04d}"
+    _TICKETS.append({"ticket_id": ticket_id, "user_id": user_id, "reason": reason, "summary": summary})
+    return {"ok": True, "terminal": True, "ticket_id": ticket_id, "reason": reason}
