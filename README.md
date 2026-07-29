@@ -2,7 +2,8 @@
 
 用「先摸底 → 二八原则切入 → 边做边测边留痕」的方式系统学习 Agent 开发。终点定在
 **Advanced（第 4 级）**：能独立设计并搭出一个 production 级客服 Agent，懂每个组件的
-权衡取舍，能在面试里讲透细节。为**国内社招求职**而学，重项目细节与落地。
+权衡取舍，能在面试里讲透细节。为求职而学（**校招/应届为主、社招兼顾**），重项目细节与落地；
+研究向内容按校招加分权重穿插。目标岗见 [Requirements/](Requirements/)。
 
 - **学习者画像**：会 Python、调过大模型 API、懂 LLM 原理；工程基本功偏弱（环境管理、多文件项目结构）。
 - **默认模型**：DeepSeek（OpenAI 兼容接口，写法可迁移到通义千问 / GPT）；RAG 的 embedding 用 OpenAI `text-embedding-3-small`。
@@ -56,9 +57,12 @@
 
 ### 🚧 进行中 / ⬜ 待学
 
-- **L9 框架对比（进行中）**：用 LangGraph 重写 capstone 一个有界切片 → 裸 SDK vs 框架两版对比 → **ADR**（何时该上框架）。裸 SDK 版即现成对照组。
+- **L9 框架对比（进行中）**：横扫 LangChain/LlamaIndex/AutoGen/CrewAI 定位 + 深挖 LangGraph 重写切片 → **ADR**（何时该上框架）。裸 SDK 版即对照组。
 - **Core Track**：L10 MCP 与工具集成边界 · Core capstone 升级 + 最小部署。
-- **Advanced Track**（边投递边学）：L11 Multi-Agent · L12 评估（LLM-as-judge） · L13 可观测性 / 成本 / 延迟 / 重试限流 · L14 服务化与安全（含 prompt 注入测试）。
+- **Advanced Track**（边投递边学）：L11 Multi-Agent · L12 评估（LLM-as-judge） · L13 可观测性/成本/延迟/重试限流 · **L13.5 Agent Harness**（沙箱/执行约束/上下文交接/长任务稳定，Claude Code 锚点）· L14 服务化与安全。
+- **追补 + 校招加分**：L8 补 Reflection 反思范式；研究向（Coding Agent/RL/self-improvement/多模态 = 书 Ch5/7/8/9）按校招加分权重穿插；开源贡献纳入。
+
+> 🎯 **完整大纲、当前位置、每项来源（JD 计划 / 对标书 / 校招加分）见 [ROADMAP.md](ROADMAP.md)。**
 
 > 📚 **对标教程**：引入 [bojieli/ai-agent-book](https://github.com/bojieli/ai-agent-book)（10 章 / 93 项目 / 中文优先）作**参照脊柱、按主题精读**——L10 MCP ← Ch4 · L12 评估 ← Ch6 · L11 多智能体 ← Ch10。框架 / 部署 / 可观测性书未覆盖，仍按 JD 走。浅克隆在 `reference/repos/`（不入库）。
 

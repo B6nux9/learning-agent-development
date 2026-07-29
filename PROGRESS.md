@@ -40,7 +40,10 @@
   load/save memory.json + 注入 system prompt + `remember` 工具，**分两次运行验证跨重启记忆**）
 > **⚠️ 大纲已于 2026-07-21 按 11 份目标岗位 JD 重排**。完整分析见
 > [`Requirements/JD分析与大纲调整.md`](Requirements/JD分析与大纲调整.md)（含频次统计表、gap 分析、两个战略决策）。
-> 求职定位：**社招**，1-3 个月投一轮，不排除长期作战。JD 原文存在 `Requirements/`。
+> 求职定位：**校招/应届为主（在校生），社招兼顾**（2026-07-29 用户确认，原写社招）。JD 原文存 `Requirements/`。
+> **🆕 新增 4 个百度校招高优先岗**（`Requirements/百度2027校招-Agent岗位4则.txt`：AIDU 全栈/**Agent Harness**/智能体算法/大模型研发；JD3 要硕士；加分=论文/开源/竞赛）。
+> **技术融合（详见 [ROADMAP.md](ROADMAP.md)）**：① L8 补 **Reflection 反思**范式(capstone reflection 节点)；② L9 从只学 LangGraph **扩成横扫 LangChain/LlamaIndex/AutoGen/CrewAI 定位 + ADR 对比**；
+> ③ 新增 **L13.5 Agent Harness 专题**(沙箱/执行约束/上下文交接/compaction/长任务稳定，Claude Code 锚点)；④ 研究向(书 Ch5/7/8/9=Coding/RL/self-improvement/多模态)从长期作战**上调为校招加分，投递前尽量碰**；⑤ 加分项(开源贡献/竞赛)纳入。
 
 ### 🔵 阶段二：核心能力补齐（投递前必做）
 - [x] **L6 上下文管理 + Prompt/Context Engineering** —— 已完成，达标（quiz 6 题过；
