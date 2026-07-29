@@ -14,8 +14,8 @@
 
 1. **Layman** — 说清 agent 与普通调 LLM 的区别（LLM + 工具 + 记忆 + 循环）。
 2. **Beginner** — 手写 agent loop，让模型调用工具完成多步任务。← 核心 20%
-3. **Intermediate** — 记忆、上下文长度管理、RAG、多工具编排、路由 / ReAct，搭出客服原型。 **← 当前**
-4. **Advanced** — 上下文工程、评估、错误处理、成本 / 延迟 / 可观测性、服务化，打磨成上线级项目。 **← 终点**
+3. **Intermediate** — 记忆、上下文长度管理、RAG、多工具编排、路由 / ReAct，搭出客服原型。 ✅（capstone 裸 SDK 版封版）
+4. **Advanced** — 上下文工程、评估、错误处理、成本 / 延迟 / 可观测性、服务化，打磨成上线级项目。 **← 当前（L9 起）**，也是终点
 5. **Expert** — 自研框架、前沿（本课不追，选做拓展）。
 
 ## 大纲与进度（两轨制，按 11 份目标岗位 JD 需求频次重排）
@@ -34,25 +34,32 @@
 | L6 | 上下文长度管理 + Prompt / 结构化输出 | `lesson-06/` |
 | L7 | RAG 与向量数据库（chunking / embedding / ChromaDB / grounding） | `lesson-07/` · `eval/` |
 | L8 | 路由 / ReAct / Planning + **smolagents 源码锚点** | `lesson-08/` · `anchor-notes/L8-smolagents.md` |
+| 🎯 阶段二 capstone | 简历级客服 Agent（**裸 SDK 版封版**，见下） | `capstones/stage2-customer-service-agent/` |
 
-### 🎯 阶段二 capstone —— 简历级客服 Agent（施工中，**当前**）
+### 🎯 阶段二 capstone —— 简历级客服 Agent（**裸 SDK 版已封版** ✅）
 
 模拟面试驱动：设计面两轮通过 → 第三轮「带着盖楼」动手搭。综合 L1–L8 全部能力。
 代码见 [`capstones/stage2-customer-service-agent/`](capstones/stage2-customer-service-agent/)（[DESIGN.md](capstones/stage2-customer-service-agent/DESIGN.md) 是施工图）。
 
-已盖完 4 块、端到端 4 场景跑绿：
+**能力三类**（查订单/物流 · 退款 · 政策答疑 RAG），**安全三道线**，端到端 6 场景 + 10 pytest 全绿：
 
 - **`query_order`** — 归属校验（存在 / 越权 / 不存在三分）+ 出口字段塑形。
-- **`dispatch`** — 注入落地：`user_id` 由会话代码注入、`order_id` 取模型 args，**两道防线**防越权。
-- **`run()`** — 真 ReAct while-loop + `LoopGuard`（轮数上限 + 真实 `usage.prompt_tokens` 预算闸门）。
+- **`dispatch` + 注入防线** — `user_id` 由会话代码注入、模型 args 一律不认（防越权，判据「按用户隔离才上锁」）。
+- **`run()`** — 真 ReAct while-loop + `LoopGuard`（轮数上限 + 真实 `usage.prompt_tokens` 预算闸门）+ **通用 terminal 停机信号**。
 - **`process_refund`** — 招牌菜：阈值 `≤¥200` **hard-code 在代码**（不让 LLM 判）+ 幂等防重复退 + 超阈值转人工。
+- **`search_policy`（RAG）** — 相似度阈值 **1.15**（`calibrate_threshold.py` 从 eval 13 条分布标定）挡「没覆盖」转人工，防幻觉。
+- **`escalate_to_human`** — 转人工做成**终态工具**：开审计工单（`_TICKETS` 台账）+ `terminal` 信号真正终止 loop，不靠话术。
+- **测试**：`test_tools.py` / `test_policy.py` 共 10 条正反 + **mock/monkeypatch/惰性化可测性**（碰网络的 RAG 用测试替身隔离）。
 
-下一步：pytest 门禁（自己写）→ RAG 政策答疑 → 真 `escalate_to_human` 工具 → 意图路由。
+封版走**门禁三条**：环境可复现 / 至少 1 正 1 反 pytest 绿 / 无调试残留。
 
-### ⬜ 待学
+### 🚧 进行中 / ⬜ 待学
 
-- **Core Track**：L9 框架对比（裸 SDK vs LangGraph → ADR）· L10 MCP 与工具集成边界 · Core capstone 升级 + 最小部署。
-- **Advanced Track**（边投递边学）：L11 Multi-Agent · L12 评估（LLM-as-judge） · L13 可观测性 / 成本 / 延迟 · L14 服务化与安全（含 prompt 注入测试）。
+- **L9 框架对比（进行中）**：用 LangGraph 重写 capstone 一个有界切片 → 裸 SDK vs 框架两版对比 → **ADR**（何时该上框架）。裸 SDK 版即现成对照组。
+- **Core Track**：L10 MCP 与工具集成边界 · Core capstone 升级 + 最小部署。
+- **Advanced Track**（边投递边学）：L11 Multi-Agent · L12 评估（LLM-as-judge） · L13 可观测性 / 成本 / 延迟 / 重试限流 · L14 服务化与安全（含 prompt 注入测试）。
+
+> 📚 **对标教程**：引入 [bojieli/ai-agent-book](https://github.com/bojieli/ai-agent-book)（10 章 / 93 项目 / 中文优先）作**参照脊柱、按主题精读**——L10 MCP ← Ch4 · L12 评估 ← Ch6 · L11 多智能体 ← Ch10。框架 / 部署 / 可观测性书未覆盖，仍按 JD 走。浅克隆在 `reference/repos/`（不入库）。
 
 ## 教学方法
 
@@ -83,9 +90,14 @@ learning-agent-development/
 ├── reference/               # 参考（模型选型等）
 ├── eval/                    # RAG 评估集（L7 起，养到 L12；含越权 / 无法回答 / 对抗分区）
 ├── anchor-notes/            # 源码锚点笔记（smolagents 等）
+├── reference/repos/         # 浅克隆参照仓库（smolagents · ai-agent-book；gitignore 不入库）
 ├── lesson-01/ … lesson-08/  # 每节：notes.md · quiz.md · summary.pdf · homework/
 └── capstones/
-    └── stage2-customer-service-agent/   # 阶段二 capstone：DESIGN.md + tools/agent/main.py
+    └── stage2-customer-service-agent/   # 阶段二 capstone（裸 SDK 版封版）
+        ├── DESIGN.md                    # 施工图 + 未来增强
+        ├── tools.py / agent.py / policy_rag.py / main.py
+        ├── calibrate_threshold.py       # RAG 阈值从 eval 分布标定
+        └── test_tools.py / test_policy.py  # 10 条正反 + mock
 ```
 
 ## 续学入口
