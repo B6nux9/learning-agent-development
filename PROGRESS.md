@@ -402,9 +402,18 @@ L8 作业早已封版；2026-07-27（本 session）又按新教学法补做了�
   - **书没有、继续按 JD 走**：**L9 LangChain/框架、L13 可观测·成本·延迟·重试限流、L14 部署** —— 社招硬需求，书缺（研究者写书重理解、企业招人重落地）。
   - 书 Ch5 Coding/Ch7 后训练/Ch8 持续进化/Ch9 多模态 = 研究向加分项 → **长期作战**，第一轮投递不碰。判据不变：二八 + 社招过滤器。
 
-  **⭐ 下次：进 L9 LangChain**（用户已明确"往封版走→进 LangChain"；书不覆盖框架，按 JD 走）。v3 打法：**同一有界工作流裸 SDK vs LangGraph 两版对比 → ADR**。
-  裸 SDK 版就是这个 capstone，现成的对照组。
-  **封版后仍可选做（不挡 L9，随时回补）**：
+  **✅ L9 框架对比 已封版（2026-07-29）**：`agent_langgraph.py` 把裸 SDK `run()` 循环用 **LangGraph** 重写，功能对等
+  （agent⇄tools 循环 + terminal 终止 + recursion_limit），**工具层 tools.py 一行不改共用**。产出 **`ADR-001-langgraph-vs-bare-sdk.md`**：
+  结论**编排层采用裸 SDK**（框架招牌价值当前用不上 + 安全注入逼写自定义节点=框架连省代码都没做到；触发切 LangGraph=多分支/human-in-loop/多agent/checkpoint）。
+  - **Part A 框架横扫**（LangChain/LlamaIndex/AutoGen/CrewAI 定位）已讲，进 interview-notes（待补）。
+  - **教学高光**：用户批判性很强——自己质疑 `{"tools":"tools"}` 恒等映射冗余（→ list 形式）、质疑写法优雅度（→ 引出"内置件不合身安全注入"ADR 金句）、追问 recursion_limit 数什么（→ 澄清 super-step vs 对话轮/escalate 终止 vs 保险丝两条路）。
+  - **环境坑**：`pip install grandalf` 装错环境（uv 项目要 `uv add`）——头号短板重现，已强化"uv 项目只用 uv add"。
+  - LangGraph 概念（State/node/edge/条件边/回边/画图 draw_mermaid|png|ascii）全过一遍，映射到 while-loop 每块。
+
+  **⭐ 下次：L10 MCP（第一个"真从对标书学"的课）——用书 Ch4 当主线精读 + 跑项目**（见 ROADMAP）。
+  **可选/追补（不挡 L10，随时回补）**：
+  ⓪ **Reflection 反思范式**（capstone 加 reflection 节点，百度 JD1/3 点名）——校招缺口，优先。
+  ① interview-notes 补 L9 素材（框架横扫表 + 三条 ADR 金句：框架价值∝静态声明 / 优雅捷径假设 happy path / 内置件撞安全注入）。
   ③ **显式意图路由**（LLM-as-router + 结构化输出枚举 intent）：现状 tool-calling 隐式分流够用，正好留作 L9 裸 SDK vs LangGraph 对比素材。
   ④ dispatch 注入防御测试（args 塞 user_id 仍 forbidden）——招牌卖点值得测试背书。
   ⑤ 三档 confidence-band 澄清路由（见 DESIGN 未来增强）——LangGraph conditional edge 的绝佳对比素材。

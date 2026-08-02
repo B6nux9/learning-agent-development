@@ -31,11 +31,12 @@
 ## 当前位置
 
 ```
-Layman ─ Beginner ─ [Intermediate ✅ 已扎实] ─▶ [Advanced 🚧 当前, L9 起] ─ Expert(不追)
+Layman ─ Beginner ─ [Intermediate ✅ 已扎实] ─▶ [Advanced 🚧 当前, L9✅ → L10] ─ Expert(不追)
                      L1–L8 + 两个 capstone            框架/评估/部署/可观测
 ```
 
-**手里的资产**：一个可写进简历的完整客服 Agent（三类能力 + 三道安全线 + 10 pytest + 封版）。
+**手里的资产**：可写进简历的完整客服 Agent（三类能力 + 三道安全线 + 10 pytest + 封版）
++ **L9 框架对比 ADR**（裸 SDK vs LangGraph，`ADR-001-langgraph-vs-bare-sdk.md`，校招"能分析框架优劣"的直接证据）。
 
 ---
 
@@ -57,19 +58,12 @@ Layman ─ Beginner ─ [Intermediate ✅ 已扎实] ─▶ [Advanced 🚧 当�
 
 > 🔴 **L8 待追补（百度 JD 缺口）**：L8 讲了 ReAct + Plan-and-Execute，缺 **Reflection 反思**（JD1"Planning-Acting-**Reflection** 闭环"、JD3"反思"点名）。补 **Reflexion 范式**（执行后自我批判→修正），落地为 capstone 的 reflection 节点。接书 Ch8。
 
-### 🚧 当前
+### 🚧 当前 / ⬜ 将学 · Core Track（封版即投递）
 
-| 课 | 主题 | 来源 | 说明 |
+| 课 | 主题 | 来源 | 书对应 / 说明 |
 |---|---|---|---|
-| **L9** | 框架对比：**横扫 LangChain/LlamaIndex/AutoGen/CrewAI 定位** + 深挖 LangGraph 重写切片 → **ADR** | 🟦 | 书不覆盖框架；百度 JD **全部**要"熟悉框架优劣差异"，ADR 正中；裸 SDK 版即对照组 |
-
-> 🟡 **L9 已扩容（百度 JD 需求）**：原只学 LangGraph；4 个 JD 全部点名 LangChain/LlamaIndex/AutoGen/CrewAI，JD2 尤其要"能分析框架在长任务/文件读写/环境反馈的不足"。→ L9 先**横向 survey 四大框架各自定位**（LangGraph=有状态图 · LlamaIndex=RAG 重 · AutoGen=多 agent 对话 · CrewAI=角色编排），深挖 LangGraph 一个，**ADR 对比框架类别**。
-
-### ⬜ 将学 · Core Track（封版即投递）
-
-| 课 | 主题 | 来源 | 书对应 |
-|---|---|---|---|
-| L10 | **MCP 协议**与工具集成边界 | 🟩 书主线 | **Ch4**（7 项目：感知/执行/协作三类 + 事件驱动异步） |
+| L9 ✅ | 框架对比：横扫 LangChain/LlamaIndex/AutoGen/CrewAI 定位 + LangGraph 重写切片 → **ADR** | 🟦 | 已封版：`agent_langgraph.py` + `ADR-001`（结论=编排层用裸 SDK） |
+| **L10 🚧下一课** | **MCP 协议**与工具集成边界 | 🟩 书主线 | **Ch4**（7 项目：感知/执行/协作三类 + 事件驱动异步）——**第一个真从书学的课** |
 | — | Core capstone 升级 + 最小部署 | 🟦 | — |
 
 ### ⬜ 将学 · Advanced Track（边投递边学）
@@ -120,9 +114,9 @@ RAG 全链路 + 阈值分布标定 · 生产级判断（安全 hard-code、越�
 **仍需盯的短板**：多部分任务"改一半/漏 return" · Python 基本功（`is` vs `==`）· 多文件项目结构心智（"带着盖楼"补中）。
 
 **最近几步**：
-1. 🚧 **L9 框架**（当前）——横扫四大框架定位 + LangGraph 重写 `run()` 成图 → **ADR**。🟦
-2. ⬜ **Reflection 追补**（小）——给 capstone 加 reflection 节点（Reflexion 范式），补上 JD1/3 点名的反思闭环。🟦
-3. ⬜ **L10 MCP**——用书 **Ch4** 当主线精读 + 跑项目。🟩（第一个真正"从 GitHub 书学"的课）
+1. ✅ **L9 框架**——横扫四大框架 + LangGraph 重写 `run()` 成图 → **ADR-001**（结论=编排层用裸 SDK）。🟦
+2. 🚧 **L10 MCP**（下一课）——用书 **Ch4** 当主线精读 + 跑项目。🟩（第一个真正"从 GitHub 书学"的课）
+3. ⬜ **Reflection 追补**（小）——给 capstone 加 reflection 节点（Reflexion 范式），补 JD1/3 反思闭环。🟦
 4. ⬜ **L12 评估**——用书 **Ch6** 加厚，接上 L7 的 `eval/` 评估集。🟨
 
 ## 书怎么用（参照脊柱机制）

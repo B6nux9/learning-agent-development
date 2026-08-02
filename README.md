@@ -57,8 +57,9 @@
 
 ### 🚧 进行中 / ⬜ 待学
 
-- **L9 框架对比（进行中）**：横扫 LangChain/LlamaIndex/AutoGen/CrewAI 定位 + 深挖 LangGraph 重写切片 → **ADR**（何时该上框架）。裸 SDK 版即对照组。
-- **Core Track**：L10 MCP 与工具集成边界 · Core capstone 升级 + 最小部署。
+- **L9 框架对比 ✅ 封版**：`agent_langgraph.py` 用 LangGraph 重写 `run()`（功能对等，tools.py 共用）+ [ADR-001](capstones/stage2-customer-service-agent/ADR-001-langgraph-vs-bare-sdk.md)（结论=编排层用裸 SDK；校招"能分析框架优劣"的证据）。
+- **L10 MCP（下一课，进行中）**：MCP 协议与工具集成边界——**第一个真从对标书学的课**（书 Ch4）。
+- **Core Track**：Core capstone 升级 + 最小部署。
 - **Advanced Track**（边投递边学）：L11 Multi-Agent · L12 评估（LLM-as-judge） · L13 可观测性/成本/延迟/重试限流 · **L13.5 Agent Harness**（沙箱/执行约束/上下文交接/长任务稳定，Claude Code 锚点）· L14 服务化与安全。
 - **追补 + 校招加分**：L8 补 Reflection 反思范式；研究向（Coding Agent/RL/self-improvement/多模态 = 书 Ch5/7/8/9）按校招加分权重穿插；开源贡献纳入。
 
