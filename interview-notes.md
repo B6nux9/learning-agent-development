@@ -355,10 +355,26 @@ json_schema 失败退 json_object,解析也失败就退 ReAct——每层有下�
   ③ **安全动作不建在"模型这次记得说"上**:跟退款阈值同理,建在**代码里可审计、可测试**处。测试查物证(台账真落账 + 工单连号),不只信返回值。
 - **Python 基本功·`is` vs `==`(踩过,ruff F632)**:`is`比**身份**(同一对象)、`==`比**值**。运行时 f-string 拼出的字符串是**新对象**,`ticket_id is "T0001"`会 False(偶尔字符串驻留侥幸相等→时灵时不灵最坑)。**铁律:`is` 只用于 `None`/`True`/`False` 单例,比值一律 `==`**。反讽:同一行 `terminal is True` 能过(True 是单例),`ticket_id is "T0001"` 挂——正好演示为什么 is 只配单例。
 
+## 九、L9:框架对比(LangGraph vs 裸 SDK)+ ADR(新增,JD 6/10 简历关键词)
+
+- **框架四象限(能答"优劣差异",百度 JD 全部点名)**:LangGraph=有状态图/强控制流(有界可靠场景);LangChain=组件链/快速拼 demo;LlamaIndex=RAG 重;AutoGen=多 agent 对话;CrewAI=角色扮演多 agent。**判据:有界要可靠→LangGraph;重检索→LlamaIndex;多 agent 头脑风暴→AutoGen/CrewAI。**
+- **"我把裸 SDK loop 用 LangGraph 重写了一版"(有对照才有观点)**:while 循环→图(StateGraph);messages→State;调 LLM→agent 节点;dispatch→tools 节点;`if not tool_calls`→条件边;回到 while 顶→回边;terminal 检查→tools 后第二条件边;LoopGuard→recursion_limit。**框架没发明新概念,给循环一个标准形状。**
+- **ADR 结论=编排层用裸 SDK,三条硬理由(面试怼"为什么不用框架"的答案)**:① 框架招牌价值(可视化/checkpoint/易分支)对有界短 loop **用不上**;② 安全注入(`user_id`)逼我写自定义节点,内置 `ToolNode`/`create_react_agent` 不合身——**框架连省代码都没做到**;③ 省依赖只是附带。**触发切 LangGraph:多分支(三档澄清)/human-in-loop/多 agent/checkpoint。**
+- **三条框架金句**:① **框架工具价值 ∝ 你把结构静态声明的程度**(条件边不给 path_map,能跑但画不出图/校验不了);② **优雅捷径假设你走 happy path**,非标准安全需求就不合身;③ `recursion_limit` 是 raise 不是优雅 return,要自己 try/except 兜底(框架给闸门,默认行为未必是你要的)。
+- 迁移摩擦:`tool_calls` 裸 SDK 是嵌套对象(`call.function.arguments` 是 JSON 字符串)、LangChain 是扁平 dict(`call["args"]` 已解析)。
+
+## 十、L10:MCP 与工具生态(新增,JD 4/10 但 2025-26 热点必问)
+
+- **"讲讲 MCP"**:Anthropic 2024 末的开放标准,给 AI 工具生态定统一"插座"。**client-server**:server 用 `@mcp.tool` 暴露工具(docstring→description、类型注解→schema),client 靠 `list_tools` **发现**、`call_tool` **调用**,stdio(本地)/Streamable HTTP(远程)传输。**三原语:工具(可执行)/资源(只读数据)/提示模板。** 价值=一次开发处处可用。
+- **⭐"你怎么保证 MCP 工具安全"(踩坑+正解,王牌)**:包成 MCP 后工具参数全来自 client,**我原本 session 注入的身份防线失效**——被注入的模型能传任意 `user_id` 越权。正解:**身份属 server 的认证上下文,不做成 client 可填的工具参数**;工具只暴露 `order_id`,`user_id` 由 server 注入。实测 client 硬塞 `user_id` 冒充,server 无视仍 forbidden——**防线在 server 逻辑(传了也不信),不在参数校验。** 原则同 capstone:高危数据来源锁在被调用方。
+- **MCP 安全四风险**:① 工具描述投毒(description 进上下文=prompt 注入变种,每次会话生效);② 恶意/被劫持 server(供应链);③ 同名工具遮蔽(tool shadowing,截走敏感参数);④ 凭证滥用。缓解:审查描述(当不可信输入)/锁版本/最小权限凭证。
+- **工具描述的艺术(ACI 原则,反哺了 capstone)**:① **"什么时候用" > "能做什么"**;② **边界/反例最重要**(调用失败头号原因是模型不知道工具**不能**做什么);③ 参数用具体例子(附 1-5 调用示例,准确率 72%→90%);④ **参数保真性**(工具静默改写输入=模型 debug 不出的隐蔽 bug,模型感知的世界=工具操作的世界);⑤ **回答话术留 system prompt、不进工具描述**(否则工具没法复用,尤其 MCP 要一次开发处处可用)。我把四个工具统一成 `功能/时机/边界/参数/返回` 结构。
+- **主动工具发现(L3 伏笔收口)**:工具上百个不能全量注入 schema。① 主动发现(Agent 声明缺口→工具搜索元工具→语义匹配注入,MCP-Zero 2800 工具省 ~98% token;Anthropic Tool Search 让 Opus4 准确率 49%→74%);② Skills 渐进披露(只给薄目录、按需读文件,工具选择变知识检索,不用向量索引)。工程:**动态加载别破坏 KV Cache**——新 schema 追加末尾、保前缀稳定(L6 注入位置回扣)。**判断何时用:几个工具全塞 prompt 就好,上百工具才值这套基础设施(senior vs junior)。**
+
 ## 待补(学完对应课程后回来填)
 - [x] ~~L6 遗留:单元测试系统学习~~ → **已还**:capstone 亲手写 9 条(tools 6 + policy 3),并系统学 mock/monkeypatch/惰性化可测性(见上「mock 深水区四连招」)
-- [ ] L9:LangChain 实战(填第一节第 3 条)
-- [ ] L10:MCP
+- [x] ~~L9:LangChain 实战~~ → **已填**(见「九、L9」)
+- [x] ~~L10:MCP~~ → **已填**(见「十、L10」)
 - [ ] L11:Multi-Agent
 - [ ] L12/L13:评估指标与可观测性
 - [ ] L14:部署

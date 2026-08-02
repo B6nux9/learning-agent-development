@@ -55,7 +55,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "query_order",
-            "description": "查询一笔订单的状态、发货时间、金额。用户问订单/物流时调用。",
+            "description": "功能：查询一笔订单的状态、发货时间、金额。时机：用户问订单状态/物流进度时。边界：只能按订单号查，不能按姓名/手机号搜；只返回本人订单。参数：order_id — 订单号，如 A123。返回：{ok, status, shipped_at, amount} 或 {ok:false, reason}。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -70,7 +70,7 @@ TOOLS = [
         "function": {
             "name": "process_refund",
             # ⚠️ 同样只暴露 order_id：不给 amount。能不能退、退多少由代码定，不信模型报数。
-            "description": "为一笔订单发起退款。用户明确要求退款时调用。是否放行由系统按金额阈值决定。",
+            "description": "功能：为一笔订单发起退款（高危、不可逆写操作）。时机：用户明确要求退款时。边界：不接受金额参数（金额由系统按订单真值定）；能否放行由系统按额度阈值决定，不由本工具承诺；已退款订单不会重复退。参数：order_id — 要退款的订单号，如 A123。返回：{ok:true, refunded} 或 {ok:false, reason: needs_human/already_refunded/forbidden/order_not_found}。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -84,7 +84,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "search_policy",
-            "description": "查询平台政策。用户问售后政策时调用。",
+            "description": "功能：检索退换货政策库并基于命中内容作答。时机：用户问退货/退款/运费/换货/发票等政策时。边界：不覆盖跨境/定制/活动等特殊政策；检索相似度不够时会判为未覆盖并转人工，勿硬答。参数：question — 用户的政策问题，如「退货运费谁承担？」。返回：{ok:true, answer} 或 {ok:false, reason: not_covered}。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -98,12 +98,12 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "escalate_to_human",
-            "description": "转人工。用户问的事不在系统能力范围内时调用，（例如：退款超限/政策没覆盖/用户明确要求人工/agent 无法处理）",
+            "description": "功能：转人工——开审计工单并终止本轮自动处理。时机：退款超额度/政策未覆盖/用户明确要求人工/agent 无法处理时。边界：仅登记工单交接人工，不代替人工给结论（不要承诺处理结果）。参数：reason（枚举原因）、summary（一句话问题摘要）。返回：{ok:true, terminal:true, ticket_id}。",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "reason": {"type": "string", "enum": ["over_refund_limit", "policy_not_covered", "user_request", "other"], "description": "转人工的原因"},
-                    "summary": {"type": "string", "description": "问题摘要"}
+                    "summary": {"type": "string", "description": "一句话问题摘要，供人工客服快速接手，如「用户要退 699 元订单 D999，超自动退款额度」"}
                 },
                 "required": ["reason", "summary"],
             },

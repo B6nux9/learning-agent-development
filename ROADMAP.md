@@ -31,7 +31,7 @@
 ## 当前位置
 
 ```
-Layman ─ Beginner ─ [Intermediate ✅ 已扎实] ─▶ [Advanced 🚧 当前, L9✅ → L10] ─ Expert(不追)
+Layman ─ Beginner ─ [Intermediate ✅ 已扎实] ─▶ [Advanced 🚧 当前, L9✅ L10✅ → 下一课] ─ Expert(不追)
                      L1–L8 + 两个 capstone            框架/评估/部署/可观测
 ```
 
@@ -62,8 +62,8 @@ Layman ─ Beginner ─ [Intermediate ✅ 已扎实] ─▶ [Advanced 🚧 当�
 
 | 课 | 主题 | 来源 | 书对应 / 说明 |
 |---|---|---|---|
-| L9 ✅ | 框架对比：横扫 LangChain/LlamaIndex/AutoGen/CrewAI 定位 + LangGraph 重写切片 → **ADR** | 🟦 | 已封版：`agent_langgraph.py` + `ADR-001`（结论=编排层用裸 SDK） |
-| **L10 🚧下一课** | **MCP 协议**与工具集成边界 | 🟩 书主线 | **Ch4**（7 项目：感知/执行/协作三类 + 事件驱动异步）——**第一个真从书学的课** |
+| L9 ✅ | 框架对比：横扫四大框架定位 + LangGraph 重写切片 → **ADR** | 🟦 | 已封版：`agent_langgraph.py` + `ADR-001`（结论=编排层用裸 SDK） |
+| L10 ✅ | **MCP 协议**与工具集成边界 | 🟩 书 Ch4 | 已封版：`lesson-10/` 建 MCP server/client + 安全身份注入 + ACI 工具描述反哺 capstone |
 | — | Core capstone 升级 + 最小部署 | 🟦 | — |
 
 ### ⬜ 将学 · Advanced Track（边投递边学）
@@ -114,10 +114,10 @@ RAG 全链路 + 阈值分布标定 · 生产级判断（安全 hard-code、越�
 **仍需盯的短板**：多部分任务"改一半/漏 return" · Python 基本功（`is` vs `==`）· 多文件项目结构心智（"带着盖楼"补中）。
 
 **最近几步**：
-1. ✅ **L9 框架**——横扫四大框架 + LangGraph 重写 `run()` 成图 → **ADR-001**（结论=编排层用裸 SDK）。🟦
-2. 🚧 **L10 MCP**（下一课）——用书 **Ch4** 当主线精读 + 跑项目。🟩（第一个真正"从 GitHub 书学"的课）
-3. ⬜ **Reflection 追补**（小）——给 capstone 加 reflection 节点（Reflexion 范式），补 JD1/3 反思闭环。🟦
-4. ⬜ **L12 评估**——用书 **Ch6** 加厚，接上 L7 的 `eval/` 评估集。🟨
+1. ✅ **L9 框架** → ADR-001（编排层用裸 SDK）。🟦
+2. ✅ **L10 MCP**（书 Ch4）——建 MCP server/client + 安全身份注入 + ACI 工具描述反哺 capstone。🟩
+3. 🚧 **Reflection 追补**（下一步·校招优先）——给 capstone 加 reflection 节点（Reflexion 范式），补 JD1/3 反思闭环。🟦
+4. ⬜ **L11 Multi-Agent**（书 Ch10）· **L12 评估**（书 Ch6，接 L7 eval）。🟩/🟨
 
 ## 书怎么用（参照脊柱机制）
 

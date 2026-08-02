@@ -410,10 +410,17 @@ L8 作业早已封版；2026-07-27（本 session）又按新教学法补做了�
   - **环境坑**：`pip install grandalf` 装错环境（uv 项目要 `uv add`）——头号短板重现，已强化"uv 项目只用 uv add"。
   - LangGraph 概念（State/node/edge/条件边/回边/画图 draw_mermaid|png|ascii）全过一遍，映射到 while-loop 每块。
 
-  **⭐ 下次：L10 MCP（第一个"真从对标书学"的课）——用书 Ch4 当主线精读 + 跑项目**（见 ROADMAP）。
-  **可选/追补（不挡 L10，随时回补）**：
-  ⓪ **Reflection 反思范式**（capstone 加 reflection 节点，百度 JD1/3 点名）——校招缺口，优先。
-  ① interview-notes 补 L9 素材（框架横扫表 + 三条 ADR 金句：框架价值∝静态声明 / 优雅捷径假设 happy path / 内置件撞安全注入）。
+  **✅ L10 MCP 与工具生态 已封版（2026-07-29，第一个真从对标书 Ch4 学的课）**：
+  - 讲授（照书 Ch4）：**工具五分类**（感知/执行/协作/用户沟通/事件触发，用户 capstone 三工具对号入座）· **MCP 机制**（client-server / `@mcp.tool` / list_tools 发现 / call_tool / 三原语 工具-资源-提示 / stdio·HTTP 传输 / 插座标准 · 一次开发处处可用）· **MCP 安全四风险**（描述投毒=prompt注入变种/恶意server/tool shadowing/凭证）· **工具设计 ACI 原则**（什么时候用>能做什么、边界最重要、参数示例72%→90%、参数保真性、话术留prompt不进工具描述）· **主动工具发现**（L3 伏笔收口：主动发现MCP-Zero省98%/Skills渐进披露/动态加载别破坏KVCache/判断何时用）。
+  - **动手（lesson-10/）**：用官方 `mcp` SDK 的 FastMCP 建最小 MCP server（暴露 query_order）+ client（发现+调用，stdio）。跑通 client-server 一个来回。
+  - **⭐安全高光**：发现"包成 MCP 后 user_id 成 client 传参 → capstone 越权防线失效"，改成 server 侧注入 SESSION_USER_ID（工具只收 order_id），实测 client 硬塞 user_id 冒充仍 forbidden。**capstone 注入原则搬到 MCP 边界。**
+  - **反哺 capstone**：用 ACI 原则审计四个工具描述，统一成 `功能/时机/边界/参数/返回` 结构（search_policy 从"查询平台政策"→具体范围+边界）。10 测试仍绿。
+  - **环境**：`mcp` 2.0 拆走了 FastMCP，钉到 `mcp<2`（1.29.0）。用户批判性延续（问描述该不该结构化标签→引出"话术属prompt不属工具描述"分层）。
+
+  **⭐ 下次坐下从这里选（校招优先级）**：
+  ⓪ **Reflection 反思范式**（capstone 加 reflection 节点，百度 JD1/3 点名"Planning-Acting-Reflection 闭环"）——**校招缺口，最优先**。
+  ① **L11 Multi-Agent**（书 Ch10 主线，JD1/3 点名）。② **L12 评估**（书 Ch6：GAIA/SWE-bench，接 L7 eval）。
+  ③ **L13 可观测/成本/延迟 + L13.5 Agent Harness**（JD2 整篇，Claude Code 锚点）。④ **L14 部署** FastAPI+Docker。
   ③ **显式意图路由**（LLM-as-router + 结构化输出枚举 intent）：现状 tool-calling 隐式分流够用，正好留作 L9 裸 SDK vs LangGraph 对比素材。
   ④ dispatch 注入防御测试（args 塞 user_id 仍 forbidden）——招牌卖点值得测试背书。
   ⑤ 三档 confidence-band 澄清路由（见 DESIGN 未来增强）——LangGraph conditional edge 的绝佳对比素材。
