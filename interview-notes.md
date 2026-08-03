@@ -371,6 +371,19 @@ json_schema 失败退 json_object,解析也失败就退 ReAct——每层有下�
 - **工具描述的艺术(ACI 原则,反哺了 capstone)**:① **"什么时候用" > "能做什么"**;② **边界/反例最重要**(调用失败头号原因是模型不知道工具**不能**做什么);③ 参数用具体例子(附 1-5 调用示例,准确率 72%→90%);④ **参数保真性**(工具静默改写输入=模型 debug 不出的隐蔽 bug,模型感知的世界=工具操作的世界);⑤ **回答话术留 system prompt、不进工具描述**(否则工具没法复用,尤其 MCP 要一次开发处处可用)。我把四个工具统一成 `功能/时机/边界/参数/返回` 结构。
 - **主动工具发现(L3 伏笔收口)**:工具上百个不能全量注入 schema。① 主动发现(Agent 声明缺口→工具搜索元工具→语义匹配注入,MCP-Zero 2800 工具省 ~98% token;Anthropic Tool Search 让 Opus4 准确率 49%→74%);② Skills 渐进披露(只给薄目录、按需读文件,工具选择变知识检索,不用向量索引)。工程:**动态加载别破坏 KV Cache**——新 schema 追加末尾、保前缀稳定(L6 注入位置回扣)。**判断何时用:几个工具全塞 prompt 就好,上百工具才值这套基础设施(senior vs junior)。**
 
+## 十一、Reflection 反思范式(新增,JD1/3 点名「Planning-Acting-Reflection 闭环」)
+
+- **"你的 agent 有反思能力吗 / 怎么做 Planning-Acting-Reflection 闭环"**:我给客服 capstone 加了 **reflect 节点**——答复**发出前**用 LLM-as-judge 按红线自审,命中就重写一次。之前只有 Planning(模型选工具)-Acting(执行)-Observing(结果回喂),**缺最后的 Reflection**;补上才闭环。
+- **"反思"要能拆三层(区分度)**:① **Self-Refine**(Madaan 2023)=单次输出 生成→批判→改写,不涉任务成败、不存 memory;② **Reflexion**(Shinn 2023)=任务**失败后**写「为什么失败」**存进 memory**、带教训重试,是**语言化的 RL**(不更新权重,更新 context 经验);③ **Reflection node**=图里加 critic 节点+条件边(LangGraph pattern)。我做的是 ①+③;②那种跨 attempt 存教训更重(接书 Ch8 持续进化),讲得清但没做。
+- **⭐反直觉判断(王牌)**:反思**只审「代码判不了、但有对错」的话术层**(泄露/越权/编造/答非所问)。**能 hard-code 的(越权/超额)继续 hard-code,别改成让 LLM 反思**——可靠性来自约束,用概率手段守确定性红线是**倒退**。三道 hardcode 安全线在上游守红线,reflect 在下游守话术,分工明确。
+- **Evaluator 信号来源越靠上越可靠**:代码/规则(零成本最可靠)> 真实环境反馈(测试过没过)> LLM-as-judge(灵活但有盲区)。
+- **⭐fail-open 判断(踩坑+正解)**:reflect 是叠在**已执行的**安全线之上的**质量层**——自身故障(模型宕机/非法 JSON)绝不能拖垮已经安全的 agent,故 **fail-open**(默认 accept 放草稿过)。踩坑:我口头选了 fail-open,但 `try` 只包了解析、API 调用在外面 → **模型宕机时 create 抛异常没接住 = 实际 fail-closed(崩溃式挡死)**,和我的声明打架。改成整段 try 才自洽。并用一条测试(judge 强制抛异常→断言仍 accept)**把 fail-open 钉死防回退**。生产还要 `logger.warning` 让「质检静默失灵」可观测(L5「验收看动作不看话术」同源)。
+- **⭐代价不对称 → 从严**:误判 revise 只多一次重写(有 `MAX_REFLECTIONS=1` 兜底);误判 accept 是**坏话发给用户、收不回**。代价不对称时 rubric 偏「存疑从严」。
+- **落点选择本身是设计**:反思只挂在「正常给用户的话」那个出口;**转人工(terminal)在工具循环里就提前 return,天然进不了反思**——转人工已交人工,不该再自审。
+- **必须有上限防 thrashing**:反思→改→再反思会 thrashing 甚至死循环(**L6 压缩阈值同类坑**),`MAX_REFLECTIONS=1`。
+- **Evaluator 独立性**:同一模型自判有盲区(错答就是它写的);缓解=换视角提问(「站在合规审查角度…」)/换更强模型/代码红线兜底。judge 是「低频、质量关键」的活,可上更强模型(deepseek-v4-pro)。
+- **可测性延续 L10**:reflect 的 `client` **依赖注入**→ 测试传假 client(SimpleNamespace 拼出 `.chat.completions.create().choices[0].message.content`)、零网络「拔网线还能过」。一句话:**网络调用是副作用,作为依赖注入而非内部构造,函数才从不可测变可测。**
+
 ## 待补(学完对应课程后回来填)
 - [x] ~~L6 遗留:单元测试系统学习~~ → **已还**:capstone 亲手写 9 条(tools 6 + policy 3),并系统学 mock/monkeypatch/惰性化可测性(见上「mock 深水区四连招」)
 - [x] ~~L9:LangChain 实战~~ → **已填**(见「九、L9」)

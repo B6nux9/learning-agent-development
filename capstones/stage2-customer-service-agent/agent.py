@@ -18,6 +18,7 @@ from pathlib import Path
 
 from openai import OpenAI
 
+from reflect import reflect
 from tools import process_refund, query_order, escalate_to_human
 from policy_rag import search_policy
 
@@ -195,6 +196,11 @@ def run(user_message: str, session_user_id: str, guard: LoopGuard | None = None)
     ]
     step = 0
     prompt_tokens = 0
+
+    tool_trace: list[dict] = [] # 累积本轮工具返回，喂给 reflect 判「忠实性」
+    reflections = 0 # 已反思次数
+    MAX_REFLECTIONS = 1           # 上限（客服 latency 敏感，L6 thrashing 回扣）
+
     while True: 
         tripped_reason = guard.tripped(step, prompt_tokens) 
         if tripped_reason is not None:
@@ -213,6 +219,14 @@ def run(user_message: str, session_user_id: str, guard: LoopGuard | None = None)
         msg = resp.choices[0].message
 
         if not msg.tool_calls:
+            if reflections < MAX_REFLECTIONS:
+                reflection = reflect(user_message, msg.content, tool_trace, client)
+                if reflection.get("verdict") == "revise":
+                    messages.append({"role": "assistant", "content": msg.content})
+                    critique = reflection.get("critique", "")
+                    messages.append({"role": "user", "content": f"草稿答复不合格，请修改：{critique}"})
+                    reflections += 1
+                    continue
             return msg.content
 
         messages.append(msg)
@@ -223,6 +237,9 @@ def run(user_message: str, session_user_id: str, guard: LoopGuard | None = None)
                 "tool_call_id": call.id,
                 "content": json.dumps(result, ensure_ascii=False),
             })
+
+            tool_trace.append(result)
+            
             if result.get("terminal"):
                 return HANDOFF_REPLY.format(ticket_id=result.get("ticket_id"))
-        
+            

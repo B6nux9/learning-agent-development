@@ -417,14 +417,29 @@ L8 作业早已封版；2026-07-27（本 session）又按新教学法补做了�
   - **反哺 capstone**：用 ACI 原则审计四个工具描述，统一成 `功能/时机/边界/参数/返回` 结构（search_policy 从"查询平台政策"→具体范围+边界）。10 测试仍绿。
   - **环境**：`mcp` 2.0 拆走了 FastMCP，钉到 `mcp<2`（1.29.0）。用户批判性延续（问描述该不该结构化标签→引出"话术属prompt不属工具描述"分层）。
 
+  **✅ Reflection 反思范式 已封版（2026-08-04，Windows）—— 校招缺口补齐**：
+  - 定位：L8 追补 / 补齐 capstone 的 **Planning-Acting-Reflection 闭环**（百度 JD1/3 点名）。对标书 Ch8 入门形态。
+  - **新建 `reflect.py`**（evaluator，LLM-as-judge）：rubric 从 SYSTEM_PROMPT 话术约束 + 三道安全线翻译成「质检员视角」；
+    结构化输出 json_object 返回 `{verdict, critique}`；**client 依赖注入可 mock**；**整段 try + fail-open**（质量层不拖垮已有安全线）。
+  - **`agent.py run()` 接线**：正常出口前调 reflect（`MAX_REFLECTIONS=1`）；revise→append 草稿+critique 重写一次；
+    `tool_trace` 累积每个工具返回喂 judge 判忠实性。**落点只在正常出口**（terminal 转人工提前 return，天然不进反思）。
+  - **`test_reflect.py`（门禁第二条，3 条全绿）**：accept 正 / revise 反 / **fail-open 兜底**（judge 抛异常→仍 accept，钉死防回退）。
+    假 client 用 SimpleNamespace 拼调用链，零网络。连同 tools 6 + policy 3 = **13 passed**。
+  - **实测证据**：直接探针 3 条——泄露归属 revise（点名红线1）/ 编造金额 revise（点名红线3）/ 合规 accept；端到端 6 场景全绿不误伤。
+  - **门禁三条全过**：环境可复现 ✅ / 13 测试正反俱全 ✅ / 无残留（你来写·TODO 清光、py_compile 过、无硬编码 key）✅。
+  - **教学高光/踩坑**：① rubric 初版抄成「演员台词」→ 翻译成审查视角；② 模型名误写 gpt-4o-mini（DeepSeek 端点没有）；
+    ③ fail-open 声明与代码打架（try 没包 API 调用，模型宕机时实际 fail-closed）→ 整段 try 修正；
+    ④ **头号短板重现**：`tool_trace.append` 摆在 for 循环外（一轮多工具只收最后一个）→ 挪进循环内；
+    ⑤ 两个埋点答透：fail-open 理由（质量层叠在已执行的安全线上）、client 为何注入（可 mock / 副作用依赖注入）。
+  - 素材已进 interview-notes「十一、Reflection」（含 fail-open / 代价不对称 / 落点选择 / Evaluator 独立性 王牌话术）。
+
   **⭐ 下次坐下从这里选（校招优先级）**：
-  ⓪ **Reflection 反思范式**（capstone 加 reflection 节点，百度 JD1/3 点名"Planning-Acting-Reflection 闭环"）——**校招缺口，最优先**。
-  ① **L11 Multi-Agent**（书 Ch10 主线，JD1/3 点名）。② **L12 评估**（书 Ch6：GAIA/SWE-bench，接 L7 eval）。
+  ① **L11 Multi-Agent**（书 Ch10 主线，JD1/3 点名，L4 编排的自然延伸）——**下一个主推**。
+  ② **L12 评估**（书 Ch6：GAIA/SWE-bench/TAU2，接 L7 eval + 本节 LLM-as-judge 的自然延伸）。
   ③ **L13 可观测/成本/延迟 + L13.5 Agent Harness**（JD2 整篇，Claude Code 锚点）。④ **L14 部署** FastAPI+Docker。
-  ③ **显式意图路由**（LLM-as-router + 结构化输出枚举 intent）：现状 tool-calling 隐式分流够用，正好留作 L9 裸 SDK vs LangGraph 对比素材。
-  ④ dispatch 注入防御测试（args 塞 user_id 仍 forbidden）——招牌卖点值得测试背书。
-  ⑤ 三档 confidence-band 澄清路由（见 DESIGN 未来增强）——LangGraph conditional edge 的绝佳对比素材。
-  ⑥ capstone README（给面试官翻 repo 用）+ summary.pdf——阶段三简历包装时做。
+  ⑤ **Reflexion 更重版**（跨 attempt 存 memory 从失败轨迹学教训）——接书 Ch8 持续进化，研究向加分。
+  ⑥ 三档 confidence-band 澄清路由（见 DESIGN 未来增强）——LangGraph conditional edge 对比素材。
+  ⑦ capstone README（给面试官翻 repo 用）+ 各节 summary.pdf——阶段三简历包装时做。
 
 ## 下一步（给下个 session 的明确指令）
 - **开局顺序**：①`git pull` ②读本文件（**尤其正上方「阶段二 capstone 进度」+「L8 封版记录」**）

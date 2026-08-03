@@ -31,7 +31,7 @@
 ## 当前位置
 
 ```
-Layman ─ Beginner ─ [Intermediate ✅ 已扎实] ─▶ [Advanced 🚧 当前, L9✅ L10✅ → 下一课] ─ Expert(不追)
+Layman ─ Beginner ─ [Intermediate ✅ 已扎实] ─▶ [Advanced 🚧 当前, L9✅ L10✅ Reflection✅ → L11] ─ Expert(不追)
                      L1–L8 + 两个 capstone            框架/评估/部署/可观测
 ```
 
@@ -116,8 +116,8 @@ RAG 全链路 + 阈值分布标定 · 生产级判断（安全 hard-code、越�
 **最近几步**：
 1. ✅ **L9 框架** → ADR-001（编排层用裸 SDK）。🟦
 2. ✅ **L10 MCP**（书 Ch4）——建 MCP server/client + 安全身份注入 + ACI 工具描述反哺 capstone。🟩
-3. 🚧 **Reflection 追补**（下一步·校招优先）——给 capstone 加 reflection 节点（Reflexion 范式），补 JD1/3 反思闭环。🟦
-4. ⬜ **L11 Multi-Agent**（书 Ch10）· **L12 评估**（书 Ch6，接 L7 eval）。🟩/🟨
+3. ✅ **Reflection 追补**（2026-08-04 封版）——capstone 加 `reflect.py` LLM-as-judge 质检节点（fail-open + 依赖注入可测），补 JD1/3 的 Planning-Acting-Reflection 闭环。🟦
+4. 🚧 **L11 Multi-Agent**（书 Ch10，下一步）· **L12 评估**（书 Ch6，接 L7 eval + 本节 LLM-as-judge）。🟩/🟨
 
 ## 书怎么用（参照脊柱机制）
 
