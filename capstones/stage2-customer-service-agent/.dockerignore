@@ -1,0 +1,8 @@
+# 别把这些拷进构建上下文（防 key 泄露 / 缩小镜像）
+__pycache__/
+*.pyc
+.venv/
+test_*.py
+*.md
+deepseek_api.txt
+../../deepseek_api.txt

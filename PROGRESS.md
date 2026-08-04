@@ -435,12 +435,19 @@ L8 作业早已封版；2026-07-27（本 session）又按新教学法补做了�
 
   **🚩 用户拍板（2026-08-04）：先冲「投递-ready」再学 L11**（在校生冲 2027 届校招，秋招 9 月开闸，时间不等人）。
   投递-ready 三件套（≈1–2 次坐下，按序）：
-  ① **最小部署**（唯一要学+写的，L14 最小量）：FastAPI 把 capstone `run()` 包成 `/chat` 接口 + Dockerfile。
-     生产点：session_user_id 从**认证**来不从请求体信任（回扣 MCP「身份属服务端」）；无状态 HTTP vs 会话状态边界（L2/L5）；
-     Docker 里 key 用 env 不进镜像。走带着盖楼 + 门禁三条（测试用 FastAPI TestClient 打接口，1 正 1 反）。
-  ② **capstone README**（给面试官翻 repo）：架构图/三道安全线/怎么跑/测试/设计取舍链 ADR。
-  ③ **简历包装**：capstone 写成 2–3 条 bullet + 4 个百度岗先投哪个 + 面试预判。
-  ④ 做完①②③即**开投**，然后 L11 起边投边学。
+  ① ✅ **最小部署 已完成（2026-08-04，Windows，用户亲手 build+run Docker）**：
+     - `app.py`：FastAPI POST `/chat` + `/health`；**认证注入身份**（`X-User-Token`→user_id 查 FAKE_TOKENS，请求体故意不含 user_id）；
+       `Depends(resolve_user)` 依赖注入；run() 异常兜成 503 优雅降级（`from e` 异常链）。
+     - `test_app.py`（3 条）：正（合法 token→200+身份对）/ 反（无 token→401 且 run 没被调）/ **安全（body 偷塞 user_id 被无视，仍 u_li）**。
+     - `Dockerfile` + `requirements-deploy.txt`（pin 版本）+ `.dockerignore`：slim 基础镜像、层缓存序、非 root、key 运行时 `-e` 注入不烤进镜像、`--host 0.0.0.0`。
+     - **真跑容器揪出两个隐患**：① app 隐藏依赖第二个 key（policy_rag 的 embedding 用 OPENAI_API_KEY，本地被 env 掩盖）；
+       ② policy_rag 两个 client 在 **import 期急切构建**（`os.environ["OPENAI_API_KEY"]` 缺 key 就崩）→ 用户**惰性化**成 `_get_embed_client/_get_gen_client`（照 `_get_collection` 套路），验证缺 key 也能 import、`/health` 能起、RAG 路径延到调用时才要 key。
+     - 环境坑（都真踩了）：国内拉 Docker Hub 超时→配 registry-mirrors（daocloud/百度/dockerproxy）；Windows 8000 保留端口→换 8071；PowerShell curl 引号/`curl.exe`/UTF-8；**从仓库根跑 pytest 撞同名 tools.py + reference/ 的 sys.exit→加 `[tool.pytest.ini_options] norecursedirs` 忽略 reference，并确立「monorepo 分目录跑 pytest」工作流**。
+     - 门禁三条过：环境可复现（pin+uv）✅ / 16 测试正反俱全（分目录跑）✅ / 无残留（你来写·TODO 清光）✅。
+     - **⚠️ 老短板重现**：惰性化时两个 getter **都漏 `return`**（一次两个，参考模板 `_get_collection` 就在下面 4 行）→ 已固化自查句「写完带 `-> X` 的函数扫每条路径是否都 return，尤其干完副作用那步」。
+  ② ⬜ **capstone README**（给面试官翻 repo）：架构图/三道安全线/怎么跑/测试/设计取舍链 ADR。← **下次从这**
+  ③ ⬜ **简历包装**：capstone 写成 2–3 条 bullet + 4 个百度岗先投哪个 + 面试预判。
+  ④ 做完②③即**开投**，然后 L11 起边投边学。
 
   **⭐ 投递后 / 边投边学从这里选（校招优先级）**：
   ① **L11 Multi-Agent**（书 Ch10 主线，JD1/3 点名，L4 编排的自然延伸）——**边投边学第一课**。

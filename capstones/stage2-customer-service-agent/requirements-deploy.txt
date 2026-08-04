@@ -1,0 +1,6 @@
+# 部署镜像的运行时依赖（pin 版本 = 生产可复现，别用浮动版本）
+# 只列这一层需要的顶层包；pydantic 由 fastapi 带入。
+fastapi==0.141.1
+uvicorn==0.51.0
+openai==2.48.0
+chromadb==1.5.9

@@ -20,7 +20,19 @@ import chromadb
 from openai import OpenAI
 
 # ── 两个 client（复用 L7）：embedding 走 OpenAI，生成走 DeepSeek ──
-embed_client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+_EMBED_CLIENT = None
+def _get_embed_client() -> OpenAI:
+    # 首次调用才 OpenAI(api_key=os.environ["OPENAI_API_KEY"])，缓存进 _EMBED_CLIENT
+    global _EMBED_CLIENT
+    if _EMBED_CLIENT is None:
+        _EMBED_CLIENT = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+
+_GEN_CLIENT = None
+def _get_gen_client() -> OpenAI:
+    # 首次调用才 OpenAI(api_key=_deepseek_key(), base_url="https://api.deepseek.com")，缓存
+    global _GEN_CLIENT
+    if _GEN_CLIENT is None:
+        _GEN_CLIENT = OpenAI(api_key=_deepseek_key(), base_url="https://api.deepseek.com")
 
 
 def _deepseek_key() -> str:
@@ -28,8 +40,6 @@ def _deepseek_key() -> str:
         Path(__file__).resolve().parents[2] / "deepseek_api.txt"
     ).read_text().strip()
 
-
-gen_client = OpenAI(api_key=_deepseek_key(), base_url="https://api.deepseek.com")
 EMBED_MODEL = "text-embedding-3-small"
 GEN_MODEL = "deepseek-v4-flash"
 
@@ -46,7 +56,7 @@ POLICY_KB = [
 
 # ── 建索引（离线一次，复用 L7 的 embed + chroma；内存版够用）──
 def _embed(texts: list[str]) -> list[list[float]]:
-    resp = embed_client.embeddings.create(model=EMBED_MODEL, input=texts)
+    resp = _get_embed_client().embeddings.create(model=EMBED_MODEL, input=texts)
     return [d.embedding for d in resp.data]
 
 
@@ -76,7 +86,7 @@ def _grounded_answer(question: str, chunks: list[str]) -> str:
         "资料中没有的不得编造。若资料与用户说法矛盾，要明确纠正并给出资料里的正确信息。"
     )
     user_prompt = f"用户问题: {question}\n\n提供的资料:\n" + "\n".join(chunks)
-    resp = gen_client.chat.completions.create(
+    resp = _get_gen_client().chat.completions.create(
         model=GEN_MODEL,
         messages=[{"role": "system", "content": system_prompt},
                   {"role": "user", "content": user_prompt}],

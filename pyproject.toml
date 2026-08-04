@@ -4,14 +4,21 @@ version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
     "chromadb>=1.5.9",
+    "fastapi>=0.141.1",
     "grandalf>=0.8",
     "langchain-openai>=1.4.1",
     "langgraph>=1.2.10",
     "mcp<2",
     "openai>=2.48.0",
+    "uvicorn>=0.51.0",
 ]
 
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
 ]
+
+[tool.pytest.ini_options]
+# reference/ 下是浅克隆的外来仓库（对标书 ai-agent-book 等），其 test_*.py 会在 import 期
+# sys.exit / 缺 key 崩溃 → 别让 pytest 收集它们，否则从仓库根跑 pytest 会 INTERNALERROR。
+norecursedirs = ["reference", ".venv", ".git", "build", "dist", "*.egg"]
