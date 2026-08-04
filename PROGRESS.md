@@ -433,8 +433,17 @@ L8 作业早已封版；2026-07-27（本 session）又按新教学法补做了�
     ⑤ 两个埋点答透：fail-open 理由（质量层叠在已执行的安全线上）、client 为何注入（可 mock / 副作用依赖注入）。
   - 素材已进 interview-notes「十一、Reflection」（含 fail-open / 代价不对称 / 落点选择 / Evaluator 独立性 王牌话术）。
 
-  **⭐ 下次坐下从这里选（校招优先级）**：
-  ① **L11 Multi-Agent**（书 Ch10 主线，JD1/3 点名，L4 编排的自然延伸）——**下一个主推**。
+  **🚩 用户拍板（2026-08-04）：先冲「投递-ready」再学 L11**（在校生冲 2027 届校招，秋招 9 月开闸，时间不等人）。
+  投递-ready 三件套（≈1–2 次坐下，按序）：
+  ① **最小部署**（唯一要学+写的，L14 最小量）：FastAPI 把 capstone `run()` 包成 `/chat` 接口 + Dockerfile。
+     生产点：session_user_id 从**认证**来不从请求体信任（回扣 MCP「身份属服务端」）；无状态 HTTP vs 会话状态边界（L2/L5）；
+     Docker 里 key 用 env 不进镜像。走带着盖楼 + 门禁三条（测试用 FastAPI TestClient 打接口，1 正 1 反）。
+  ② **capstone README**（给面试官翻 repo）：架构图/三道安全线/怎么跑/测试/设计取舍链 ADR。
+  ③ **简历包装**：capstone 写成 2–3 条 bullet + 4 个百度岗先投哪个 + 面试预判。
+  ④ 做完①②③即**开投**，然后 L11 起边投边学。
+
+  **⭐ 投递后 / 边投边学从这里选（校招优先级）**：
+  ① **L11 Multi-Agent**（书 Ch10 主线，JD1/3 点名，L4 编排的自然延伸）——**边投边学第一课**。
   ② **L12 评估**（书 Ch6：GAIA/SWE-bench/TAU2，接 L7 eval + 本节 LLM-as-judge 的自然延伸）。
   ③ **L13 可观测/成本/延迟 + L13.5 Agent Harness**（JD2 整篇，Claude Code 锚点）。④ **L14 部署** FastAPI+Docker。
   ⑤ **Reflexion 更重版**（跨 attempt 存 memory 从失败轨迹学教训）——接书 Ch8 持续进化，研究向加分。
