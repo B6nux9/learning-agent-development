@@ -26,6 +26,7 @@ def _get_embed_client() -> OpenAI:
     global _EMBED_CLIENT
     if _EMBED_CLIENT is None:
         _EMBED_CLIENT = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    return _EMBED_CLIENT
 
 _GEN_CLIENT = None
 def _get_gen_client() -> OpenAI:
@@ -33,6 +34,7 @@ def _get_gen_client() -> OpenAI:
     global _GEN_CLIENT
     if _GEN_CLIENT is None:
         _GEN_CLIENT = OpenAI(api_key=_deepseek_key(), base_url="https://api.deepseek.com")
+    return _GEN_CLIENT
 
 
 def _deepseek_key() -> str:

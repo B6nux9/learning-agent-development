@@ -445,9 +445,19 @@ L8 作业早已封版；2026-07-27（本 session）又按新教学法补做了�
      - 环境坑（都真踩了）：国内拉 Docker Hub 超时→配 registry-mirrors（daocloud/百度/dockerproxy）；Windows 8000 保留端口→换 8071；PowerShell curl 引号/`curl.exe`/UTF-8；**从仓库根跑 pytest 撞同名 tools.py + reference/ 的 sys.exit→加 `[tool.pytest.ini_options] norecursedirs` 忽略 reference，并确立「monorepo 分目录跑 pytest」工作流**。
      - 门禁三条过：环境可复现（pin+uv）✅ / 16 测试正反俱全（分目录跑）✅ / 无残留（你来写·TODO 清光）✅。
      - **⚠️ 老短板重现**：惰性化时两个 getter **都漏 `return`**（一次两个，参考模板 `_get_collection` 就在下面 4 行）→ 已固化自查句「写完带 `-> X` 的函数扫每条路径是否都 return，尤其干完副作用那步」。
-  ② ⬜ **capstone README**（给面试官翻 repo）：架构图/三道安全线/怎么跑/测试/设计取舍链 ADR。← **下次从这**
-  ③ ⬜ **简历包装**：capstone 写成 2–3 条 bullet + 4 个百度岗先投哪个 + 面试预判。
-  ④ 做完②③即**开投**，然后 L11 起边投边学。
+  ② ✅ **capstone README 已完成（2026-08-04）**：`README.md` 门面+导航——能力表/亮点/架构图(mermaid 画 ReAct+Reflection 闭环)/
+     三道安全线/快速开始(CLI+pytest+uvicorn+Docker)/设计决策表链 DESIGN+ADR/已知简化。教练起草，用户 review。
+  ③ 🔵 **简历包装 = 用户自己弄**（教练已给一版 4 bullet 重排建议：拆短、加 Reflection+FastAPI/Docker 关键词、10→16 pytest、
+     "意图路由"改"function-calling 分派"防穿帮；用户说简历自己搞定）。
+  ④ 做完即**开投**，然后 L11 起边投边学。
+
+  **🔧 修复潜伏 bug（2026-08-04）**：上次"最小部署"commit(124890d) 的 policy_rag 两个惰性 getter **漏了 return**（buggy 版被提交），
+     测试没抓到（monkeypatch 的是上层接缝 `_embed`/`_get_collection`，不真调 getter；容器只测了查订单不走 RAG）→ 第一次问政策会 `None.embeddings` 崩。
+     commit 前 `git diff` 扫出来补上（`return _EMBED_CLIENT`/`_GEN_CLIENT`），验证 getter 返回+缓存生效、16 绿。**"漏 return"老短板 + git diff 自查习惯又各印证一次。**
+
+  **🧭 反思节点门控决策（2026-08-04，用户批判性提问）**：用户问"现在项目该加 reflection node 吗"——教练诚实评估：**当前"每轮都反思"对客服场景偏过度工程**
+     （安全已 hard-code、反思只兜话术低风险残差、6 场景实测全 accept=常态白跑、成本/延迟翻倍）。**生产正解=信号触发**（仅本轮 tool_trace 出现 forbidden/needs_human/not_covered/退款成功才反思）。
+     **用户决定"先不加"（保持每轮反思现状）**，作为面试口头故事（"我加了反思→发现每轮跑浪费→该门控到高危路径"=懂何时不用一个技术）。信号触发留作可选增强（性价比高的一刀）。
 
   **⭐ 投递后 / 边投边学从这里选（校招优先级）**：
   ① **L11 Multi-Agent**（书 Ch10 主线，JD1/3 点名，L4 编排的自然延伸）——**边投边学第一课**。
