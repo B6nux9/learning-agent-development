@@ -61,7 +61,8 @@
 - **L10 MCP ✅ 封版**：`lesson-10/` 用官方 mcp SDK 建 MCP server/client（工具发现+调用）+ **安全身份注入**（user_id 由 server 侧注入，防 client 越权）+ 用 ACI 原则反哺 capstone 四个工具描述。第一个真从对标书 Ch4 学的课。
 - **Reflection 反思范式 ✅ 封版**：给 capstone 补齐 **Planning-Acting-Reflection 闭环**（百度 JD1/3 点名）。新建 [`reflect.py`](capstones/stage2-customer-service-agent/reflect.py) LLM-as-judge 质检节点——答复发出前按红线自审、命中泄露/越权/编造则重写一次（`MAX_REFLECTIONS=1` 防 thrashing）；**质检层 fail-open + 依赖注入可测**，不拖垮已有三道 hard-code 安全线。门禁 13 测试绿（含 fail-open 兜底）。对标书 Ch8 入门形态。
 - **最小部署 ✅ 完成**：capstone 服务化——[`app.py`](capstones/stage2-customer-service-agent/app.py) FastAPI `/chat`（认证注入身份、故障优雅降级）+ Dockerfile 容器化（亲手 build/run 打通，踩通镜像加速/保留端口/隐藏 key 依赖/惰性化）。给面试官看的 [capstone README](capstones/stage2-customer-service-agent/README.md) 已就绪。**≈ 投递-ready**。
-- **下一步（校招优先）**：投递 + L11 Multi-Agent 多智能体（书 Ch10 主线，JD1/3 点名，边投边学）。
+- **L11 Multi-Agent ✅ 封版**（对标书 Ch10）：[`lesson-11/`](lesson-11/) 多 Agent 代码审查系统——管理者模式+隔离上下文+ThreadPoolExecutor 并行。核心判据=**协作是否引入单 Agent 拿不到的新信息**（故意让 reviewer 带 pyflakes 工具反馈而非堆同模型 LLM）。4 测试绿（含隔离性招牌测试）。呼应：上节 reflect=同模型自审=判据里"通常无效"那行。
+- **下一步（校招优先，边投边学）**：投递 + L12 评估体系（书 Ch6，接 LLM-as-judge）。
 - **Advanced Track**（边投递边学）：L11 Multi-Agent · L12 评估（LLM-as-judge） · L13 可观测性/成本/延迟/重试限流 · **L13.5 Agent Harness**（沙箱/执行约束/上下文交接/长任务稳定，Claude Code 锚点）· L14 服务化与安全。
 - **追补 + 校招加分**：L8 补 Reflection 反思范式；研究向（Coding Agent/RL/self-improvement/多模态 = 书 Ch5/7/8/9）按校招加分权重穿插；开源贡献纳入。
 

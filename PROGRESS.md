@@ -459,8 +459,22 @@ L8 作业早已封版；2026-07-27（本 session）又按新教学法补做了�
      （安全已 hard-code、反思只兜话术低风险残差、6 场景实测全 accept=常态白跑、成本/延迟翻倍）。**生产正解=信号触发**（仅本轮 tool_trace 出现 forbidden/needs_human/not_covered/退款成功才反思）。
      **用户决定"先不加"（保持每轮反思现状）**，作为面试口头故事（"我加了反思→发现每轮跑浪费→该门控到高危路径"=懂何时不用一个技术）。信号触发留作可选增强（性价比高的一刀）。
 
-  **⭐ 投递后 / 边投边学从这里选（校招优先级）**：
-  ① **L11 Multi-Agent**（书 Ch10 主线，JD1/3 点名，L4 编排的自然延伸）——**边投边学第一课**。
+  **✅ L11 Multi-Agent 已封版（2026-08-04，对标书 Ch10 主线，边投边学第一课）**：
+  - 讲授（照书 Ch10）：**两维度**（上下文共享/隔离=线程/进程 · 协作拓扑 对等/管理者/去中心化）· **核心判据=协作是否引入单Agent拿不到的新信息**（引入=执行/视觉/工具反馈显著提升;没引入=同模型自审/纯辩论通常无效;成本≈15×token）· 失败模式（并发冲突/级联放大）· Agent 社会（谈资）。
+  - **⭐打脸呼应**：上节 reflect=同模型自审=判据表"通常无效"那行→解释了它 6 场景全 accept。用户"该不该每轮反思"直觉被 Ch10 印证。
+  - **动手（lesson-11/，用户自己提的项目）= 多 Agent 代码审查系统**：管理者模式+隔离上下文+并行。`static_review`(pyflakes 工具反馈,唯一引入新信息的)+ `llm_review`(安全/正确性 lens,隔离+DI+fail-open)+ `synthesize`(去重+工具优先排序)+ `review`(ThreadPoolExecutor 并行)。
+    活证据：pyflakes 抓 db未定义/os未用(LLM漏)、LLM 抓 SQL注入/除零(工具看不见)——**价值来自异质性不是人头数**。
+  - **门禁三条过**：环境可复现(uv+pyflakes)✅ / 4 测试正反俱全（synthesize去重排序/static确定性/**隔离性招牌测试**/fail-open）✅ / 无残留(print→logger、你来写·TODO清光)✅。
+  - **本节坑（都真踩）**：sys.executable vs 裸python · Windows盘符冒号打乱解析(已知路径先剥再解析) · **prompt↔parser契约不同步→findings丢光**(改一半) · NamedTemporaryFile漏mode=w · 测试断言对着"我以为"非真实英文输出 · 并行先全submit再收result。
+  - **新概念=并行**：ThreadPoolExecutor(I/O-bound用线程,等I/O释放GIL)。用户第一次碰并发,理解了 submit/result/flatten + GIL下list.append原子。
+  - 素材进 interview-notes「十二、Multi-Agent」（判据/隔离防anchoring/并行选型/防级联 王牌）。
+
+  **⭐ 下次坐下从这里选（校招优先级，边投边学）**：
+  ① **L12 评估体系**（书 Ch6：GAIA/SWE-bench/TAU2；接 L7 eval + 本节/reflect 的 LLM-as-judge）——**下一个主推**。
+  ② **L13 可观测/成本/延迟 + API 重试限流(429) + L13.5 Agent Harness**（JD2 整篇，Claude Code 锚点）。
+  ③ **L14 部署深化**（K8s，最小部署已做过 FastAPI+Docker）。
+  ④ 研究向加分（书 Ch5 Coding/Ch7 RL/Ch8 self-improvement）：**Reflexion 重版**（跨 attempt 存 memory）· 代码审查系统加"真跑测试"的执行反馈版（RLEF 形态）。
+  ⑤ 未做的可选增强：反思**信号触发**门控（capstone）· 代码审查**语义去重**。
   ② **L12 评估**（书 Ch6：GAIA/SWE-bench/TAU2，接 L7 eval + 本节 LLM-as-judge 的自然延伸）。
   ③ **L13 可观测/成本/延迟 + L13.5 Agent Harness**（JD2 整篇，Claude Code 锚点）。④ **L14 部署** FastAPI+Docker。
   ⑤ **Reflexion 更重版**（跨 attempt 存 memory 从失败轨迹学教训）——接书 Ch8 持续进化，研究向加分。

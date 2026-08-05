@@ -10,6 +10,7 @@ dependencies = [
     "langgraph>=1.2.10",
     "mcp<2",
     "openai>=2.48.0",
+    "pyflakes>=3.4.0",
     "uvicorn>=0.51.0",
 ]
 
