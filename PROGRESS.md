@@ -469,12 +469,21 @@ L8 作业早已封版；2026-07-27（本 session）又按新教学法补做了�
   - **新概念=并行**：ThreadPoolExecutor(I/O-bound用线程,等I/O释放GIL)。用户第一次碰并发,理解了 submit/result/flatten + GIL下list.append原子。
   - 素材进 interview-notes「十二、Multi-Agent」（判据/隔离防anchoring/并行选型/防级联 王牌）。
 
+  **✅ L12 评估体系 已封版（2026-08-04，对标书 Ch6，收束课）**：
+  - 讲授（照书 Ch6）：**指标词典**（过程/结果/安全/鲁棒；**Pass@k vs Pass^k** 能力上限 vs 稳定性；轨迹 vs 结果双重覆盖=L5 体系化）·
+    **LLM-as-Judge**（长度偏差；**Rubric 四准则** + 一票否决 veto；**评判者校准** 金标集+kappa>0.7）· **统计显著性**（二项标准误/配对分析 McNemar/多重比较陷阱；分差<噪声带宽→不切换）· **可观测性回流评估资产**。
+  - **收束**：把 L7 eval 集、reflect/代码审查的 judge、刚做的 Langfuse tracing 收成体系。
+  - **动手（eval/rubric_judge.py）= Rubric LLM-judge 填掉 L7 子串匹配的坑**：`RUBRIC`(多维度+veto) + `judge_reply`(结构化+DI+fail-closed 兜底+veto 归一化) + `GOLDEN_SET`(6 条人工判定) + `calibrate`(算一致率)。
+    **⭐高光**：g03「不是,是7天」pass vs g04「是的,100天」fail——都含子串"100天"、子串匹配都误杀,LLM-judge 语义区分确认/纠正。校准 6/6 一致(诚实局限:6 条统计不够,真实要 100-200+kappa,回扣 §4 自打脸)。
+  - **门禁三条过**：环境可复现 ✅ / 4 测试正反俱全(veto 归一化/fail-closed/pass/calibrate) ✅ / 无残留 ✅。
+  - **本节坑**：json.loads 结果不保证 dict(用户自己抓到,要校验形状) · **raise ValueError 却 except JSONDecodeError 接不住**(子类接不住父类)→ except (两者) · veto/verdict 归一化差点漏 · judge 挂了该单独记 error 别混进 pass/fail。
+  - **五题 quiz 全过**,统计显著性 + judge 校准答透(应届生盲区)。素材进 interview-notes「十三、评估体系」。
+
   **⭐ 下次坐下从这里选（校招优先级，边投边学）**：
-  ① **L12 评估体系**（书 Ch6：GAIA/SWE-bench/TAU2；接 L7 eval + 本节/reflect 的 LLM-as-judge）——**下一个主推**。
-  ② **L13 可观测/成本/延迟 + API 重试限流(429) + L13.5 Agent Harness**（JD2 整篇，Claude Code 锚点）。
-  ③ **L14 部署深化**（K8s，最小部署已做过 FastAPI+Docker）。
-  ④ 研究向加分（书 Ch5 Coding/Ch7 RL/Ch8 self-improvement）：**Reflexion 重版**（跨 attempt 存 memory）· 代码审查系统加"真跑测试"的执行反馈版（RLEF 形态）。
-  ⑤ 未做的可选增强：反思**信号触发**门控（capstone）· 代码审查**语义去重**。
+  ① **L13 可观测/成本/延迟深化 + API 重试限流(429) + L13.5 Agent Harness**（JD2 整篇，Claude Code 锚点）——**下一个主推**。Langfuse 已实操,可深化(自定义 span/挂 LLM-judge 打分/dashboard)。
+  ② **L14 部署深化**（K8s，最小部署已做过 FastAPI+Docker）。
+  ③ 研究向加分（书 Ch5 Coding/Ch7 RL/Ch8 self-improvement）：**Reflexion 重版**（跨 attempt 存 memory）· 代码审查加"真跑测试"执行反馈版（RLEF）· Skills 渐进披露实现（书 Ch2/4，L10 讲过没做）。
+  ④ 未做的可选增强：反思**信号触发**门控（capstone）· 代码审查**语义去重** · rubric_judge 补 score 档位定义（§3 准则4）+ 扩金标集到 kappa。
   ② **L12 评估**（书 Ch6：GAIA/SWE-bench/TAU2，接 L7 eval + 本节 LLM-as-judge 的自然延伸）。
   ③ **L13 可观测/成本/延迟 + L13.5 Agent Harness**（JD2 整篇，Claude Code 锚点）。④ **L14 部署** FastAPI+Docker。
   ⑤ **Reflexion 更重版**（跨 attempt 存 memory 从失败轨迹学教训）——接书 Ch8 持续进化，研究向加分。

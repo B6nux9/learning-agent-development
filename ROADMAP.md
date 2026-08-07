@@ -31,7 +31,7 @@
 ## 当前位置
 
 ```
-Layman ─ Beginner ─ [Intermediate ✅ 已扎实] ─▶ [Advanced 🚧 当前, L9✅ L10✅ Reflection✅ 部署✅ L11✅ → L12] ─ Expert(不追)
+Layman ─ Beginner ─ [Intermediate ✅ 已扎实] ─▶ [Advanced 🚧 当前, L9✅ L10✅ Reflection✅ 部署✅ L11✅ L12✅ +Langfuse → L13] ─ Expert(不追)
                      L1–L8 + 两个 capstone            框架/评估/部署/可观测
 ```
 
@@ -118,7 +118,9 @@ RAG 全链路 + 阈值分布标定 · 生产级判断（安全 hard-code、越�
 2. ✅ **L10 MCP**（书 Ch4）——建 MCP server/client + 安全身份注入 + ACI 工具描述反哺 capstone。🟩
 3. ✅ **Reflection 追补**（2026-08-04 封版）——capstone 加 `reflect.py` LLM-as-judge 质检节点（fail-open + 依赖注入可测），补 JD1/3 的 Planning-Acting-Reflection 闭环。🟦
 4. ✅ **L11 Multi-Agent**（书 Ch10，2026-08-04 封版）——多 Agent 代码审查系统（管理者模式+隔离+并行，判据=引入新信息）。🟩
-5. 🚧 **L12 评估**（书 Ch6，接 L7 eval + LLM-as-judge，下一步）· **L13 可观测/Harness** · **L14 部署深化**。🟨
+5. ✅ **L12 评估**（书 Ch6，2026-08-04 封版）——Rubric LLM-judge 填 L7 子串匹配坑 + 金标集校准 + 统计显著性。🟨
+6. ✅ **可观测性 Langfuse**（capstone LangGraph 版接入,L13 预习）。🟦
+7. 🚧 **L13 可观测/成本/延迟 + Harness** · **L14 部署深化**（下一步）。🟦
 
 ## 书怎么用（参照脊柱机制）
 
