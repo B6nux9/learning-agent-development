@@ -29,7 +29,13 @@ from langchain_openai import ChatOpenAI
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 
+from dotenv import load_dotenv
+
 from agent import SYSTEM_PROMPT, TOOLS, dispatch  # 复用裸 SDK 版的 schema/prompt/dispatch
+
+# 从仓库根加载 .env（若存在）——把 LANGFUSE_* / DEEPSEEK_API_KEY 等灌进 os.environ。
+# 必须在下面 llm=ChatOpenAI(...)（会读 key）之前执行。
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
 
 # ── LLM（DeepSeek，LangChain 封装版 ChatOpenAI）──
@@ -131,6 +137,26 @@ def route_after_tools(state: State) -> str:
     return "agent"
 
 
+# ── 可观测性：Langfuse 追踪（L13）——带开关，有凭证才启用 ──
+# 为什么 LangGraph 版几乎免费接上：ChatOpenAI + 图节点都是 LangChain Runnable，
+# Langfuse 的 CallbackHandler 会自动把「每次 LLM 调用 / 每个节点」记成 span，
+# 带 token / 延迟 / 成本，无需手改每处调用（这正是 ADR 里 LangGraph「生态」价值的一次兑现；
+# 裸 SDK 版要接 Langfuse 得用 @observe 手动埋点，更累）。
+#
+# 启用方式：设三个环境变量后再跑即可，无需改代码：
+#   LANGFUSE_PUBLIC_KEY / LANGFUSE_SECRET_KEY / LANGFUSE_HOST
+# 没设时返回空 callbacks，agent 照常跑、什么都不追踪。
+def _langfuse_callbacks() -> list:
+    if not os.environ.get("LANGFUSE_PUBLIC_KEY"):
+        return []  # 开关：没配凭证 → 不启用，静默跳过
+    try:
+        from langfuse.langchain import CallbackHandler
+        return [CallbackHandler()]  # 凭证从 env 读（LANGFUSE_*）
+    except Exception:
+        # 可观测性是「旁路」——它自己出问题绝不能拖垮主链路（同 reflect 的 fail-open 精神）
+        return []
+
+
 # ── 建图（第三刀：加 terminal 终止 = tools 后的第二个条件边）──
 def build_graph():
     g = StateGraph(State)
@@ -159,7 +185,10 @@ if __name__ == "__main__":
                         {"role": "user", "content": user_message},
                     ],
                 },
-                {"recursion_limit": 8},  # = 裸 SDK 的 LoopGuard.max_steps；超了会 raise（下面 catch）
+                {
+                    "recursion_limit": 8,  # = 裸 SDK 的 LoopGuard.max_steps；超了会 raise（下面 catch）
+                    "callbacks": _langfuse_callbacks(),  # 可观测性开关：有 LANGFUSE_* 就追踪，没有就 []
+                },
             )
         except GraphRecursionError:
             # ⚠️ ADR 点：LangGraph 到上限是 RAISE，不像你 LoopGuard 优雅返回 → 要自己 catch 兜底
@@ -171,3 +200,12 @@ if __name__ == "__main__":
 
     for q in ["我的订单 A123 到哪了？", "那帮我退了 D999 吧"]:  # A123 正常查；D999 超限→转人工终止
         print(f"\n用户: {q}\n客服: {run(q)}")
+
+    # Langfuse 批量上报：脚本退出太快可能来不及发，退出前 flush 一次（没配凭证时是 no-op）
+    if os.environ.get("LANGFUSE_PUBLIC_KEY"):
+        try:
+            from langfuse import get_client
+            get_client().flush()
+            print("\n[Langfuse] trace 已上报，去 UI 查看")
+        except Exception:
+            pass
