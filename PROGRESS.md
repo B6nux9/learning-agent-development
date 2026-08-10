@@ -121,8 +121,8 @@
 - [ ] 🎯 **阶段三 capstone：项目上线 + 简历/面试包装**
 
 ### ⚪ 长期作战（第一轮投递后继续）
-- [ ] 高并发与分布式深化 · RLHF/RL 后训练深水区（**SFT 已于 2026-08-10 用户拍板提前**，见文末优先级清单） ·
-      多模态 · KV Cache/vLLM 推理优化 · Agent 安全深水区(沙箱执行) · 前沿跟踪
+- [ ] 高并发与分布式深化 · 多模态 · KV Cache/vLLM 推理优化 · Agent 安全深水区(沙箱执行) · 前沿跟踪
+      （**模型后训练 SFT+RL 已于 2026-08-10 用户拍板提前**：排 L13 之后作专项课，见文末优先级清单）
 
 - capstone 状态：阶段一 ✅ 已完成；阶段二/三 未开始
 - **时间估算**：阶段二 5 节 + 阶段三 4 节 ≈ 9 节 × ~3h + 两个 capstone ≈ **50 小时**；
@@ -479,21 +479,24 @@ L8 作业早已封版；2026-07-27（本 session）又按新教学法补做了�
   - **本节坑**：json.loads 结果不保证 dict(用户自己抓到,要校验形状) · **raise ValueError 却 except JSONDecodeError 接不住**(子类接不住父类)→ except (两者) · veto/verdict 归一化差点漏 · judge 挂了该单独记 error 别混进 pass/fail。
   - **五题 quiz 全过**,统计显著性 + judge 校准答透(应届生盲区)。素材进 interview-notes「十三、评估体系」。
 
-  **🚩 用户拍板（2026-08-10）：SFT 优先级提前**。原属"长期作战/研究向池（书 Ch7，第一轮投递不碰）"，
-  现提前为**下一个主推课**（本条 supersede 上文 2026-07-29「Ch7 → 长期作战」的决策记录）。
-  拟定形态（开课前和用户对一遍再定稿）：
-  - 定位：**SFT 微调专项（对标书 Ch7 后训练，只取 SFT/LoRA 层，RL(PPO/DPO) 仍留长期）**。
-  - 讲授：SFT 在后训练全景里的位置（预训练→SFT→RLHF/DPO）· 数据格式(chat template/loss mask 只算 assistant token) ·
-    全参 vs LoRA/QLoRA 的取舍 · 何时微调 vs 何时 prompt/RAG 就够（面试必问的判断题）。
-  - 动手（初步构想）：小开源模型（如 Qwen 系 0.5B–1.5B）上 LoRA 微调客服领域数据，
-    **复用 `eval/` 金标集 + rubric_judge 做 before/after 评估**（回扣 L12，形成"训练→评估"闭环，这是招牌）。
+  **🚩 用户拍板（2026-08-10，二次修正定稿）：先 L13，然后「模型后训练」专项（SFT 和 RL 一起学）**。
+  后训练原属"长期作战/研究向池（书 Ch7，第一轮投递不碰）"，现提前为 **L13 之后的第二优先**
+  （本条 supersede 2026-07-29「Ch7 → 长期作战」及同日早前「SFT 单独提前为下一课」两条记录）。
+  后训练专项拟定形态（开课前和用户对一遍再定稿）：
+  - 定位：**模型后训练专项（对标书 Ch7，SFT + RL 打包：预训练→SFT→RLHF/DPO 全景一次讲透）**。
+  - 讲授：后训练三阶段全景与各自解决什么问题 · SFT 数据格式(chat template/loss mask 只算 assistant token) ·
+    全参 vs LoRA/QLoRA 取舍 · RL 层：RLHF(PPO) 原理 vs **DPO 免 reward model 的取巧**（动手优先 DPO）·
+    何时微调 vs 何时 prompt/RAG 就够（面试必问的判断题）。
+  - 动手（初步构想，两段式）：小开源模型（如 Qwen 系 0.5B–1.5B）① LoRA-SFT 客服领域数据 →
+    ② 构造偏好对跑一轮 **DPO**；两段都**复用 `eval/` 金标集 + rubric_judge 做 before/after 评估**
+    （回扣 L12，形成"训练→评估"闭环，这是招牌）。PPO 讲原理不动手（工程量大，谈资即可）。
   - ⚠️ 开课前先摸底：**硬件**（Windows 机有无可用 GPU？显存多大？否则 QLoRA/Colab/云 GPU）与训练框架选型
-    （transformers+peft / LLaMA-Factory / unsloth）。
-  - 求职逻辑：百度 JD3/JD4（智能体算法/大模型研发）微调是硬通货，"亲手 SFT 过 + 有评估闭环"比多数应届生突出。
+    （transformers+peft+trl / LLaMA-Factory / unsloth）。
+  - 求职逻辑：百度 JD3/JD4（智能体算法/大模型研发）后训练是硬通货，"亲手 SFT+DPO 过 + 有评估闭环"比多数应届生突出。
 
-  **⭐ 下次坐下从这里选（校招优先级，边投边学；2026-08-10 SFT 提前后的新排序）**：
-  ① **SFT 微调专项**（书 Ch7，见上方拍板记录）——**下一个主推**。
-  ② **L13 可观测/成本/延迟深化 + API 重试限流(429) + L13.5 Agent Harness**（JD2 整篇，Claude Code 锚点）——顺延。Langfuse 已实操,可深化(自定义 span/挂 LLM-judge 打分/dashboard)。
+  **⭐ 下次坐下从这里选（校招优先级，边投边学；2026-08-10 定稿排序）**：
+  ① **L13 可观测/成本/延迟深化 + API 重试限流(429) + L13.5 Agent Harness**（JD2 整篇，Claude Code 锚点）——**下一个主推**。Langfuse 已实操,可深化(自定义 span/挂 LLM-judge 打分/dashboard)。
+  ② **模型后训练专项（SFT+RL）**（书 Ch7，见上方拍板记录）——L13 封版后紧接着开。
   ③ **L14 部署深化**（K8s，最小部署已做过 FastAPI+Docker）。
   ④ 其余研究向加分（书 Ch5 Coding/Ch8 self-improvement）：**Reflexion 重版**（跨 attempt 存 memory）· 代码审查加"真跑测试"执行反馈版（RLEF）· Skills 渐进披露实现（书 Ch2/4，L10 讲过没做）。
   ⑤ 未做的可选增强：反思**信号触发**门控（capstone）· 代码审查**语义去重** · rubric_judge 补 score 档位定义（§3 准则4）+ 扩金标集到 kappa ·
