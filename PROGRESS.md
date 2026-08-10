@@ -560,4 +560,4 @@ L8 作业早已封版；2026-07-27（本 session）又按新教学法补做了�
 - **课程路线**:R0 蓝图环境 → R1 researcher 子图纵切 → R2 压缩与上下文隔离 → R3 supervisor 并发派活 → R4 主图端到端 → R4.5 prompts 精读 → R5 配置层+diff 总复盘 → R6 扩展选单(checkpoint/HITL、Langfuse=抵扣L13、Send API、mini-eval=回扣L12、MCP=回扣L10)。
 - **技术定案**:DeepSeek 为主(`init_chat_model`,R0 需 `uv add langchain-deepseek`);搜索工具 R0 确认用户 Google key 类型,不能用回退 Tavily。
 - **与 L13 的关系(2026-08-11 合并 mac 端进度后修正)**:L13 已在 mac 端开工(llm_client 作业+13 测试完工,用户要求晚点重过,块4/5为教练代写需验证消化)——**两线并行**:L13 收尾在 mac 端继续,ODR 专题在 Windows 端推进;R6 扩展②(Langfuse 全链路)完成后仍可抵扣 L13 的可观测部分。两线不抢占,以用户当次坐下点名的为准。
-- **当前状态**:流程文件与目录骨架已建,R0 已开始(2026-08-11,Windows 端)。
+- **当前状态**:**R0 蓝图与环境 封版 ✅**(2026-08-11,Windows 端):DESIGN.md 定稿、DeepSeek+Tavily smoke 全通、quiz 3/3、interview-notes 新增「十四」。断点与 R1 指令见 `REBUILD-PLAN.md` F 区。

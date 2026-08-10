@@ -407,6 +407,16 @@ json_schema 失败退 json_object,解析也失败就退 ReAct——每层有下�
 - **⭐ 动手:Rubric LLM-judge 填掉 L7 子串匹配的坑**:同一"100天无理由"假前提,g03「不是,是7天」(pass) vs g04「是的,100天」(fail)——**都含子串"100天",子串匹配 must_not_contain 会两条都误杀;LLM-judge 语义区分"确认 vs 纠正"**。金标集 6/6 一致(但诚实:6条统计上不够,真实要 100-200 + kappa)。
 - **本节工程坑**:① `json.loads` 结果不保证是 dict(可能 list/缺 key)→ 要校验形状,不能光 except JSONDecodeError;② **raise/except 类型不匹配**——`raise ValueError` 却 `except JSONDecodeError`(它是 ValueError 子类,catch 子类接不住父类)→ `except (JSONDecodeError, ValueError)`;③ **judge 挂了单独记 error**,别混进 agent 的 pass/fail(评委故障≠agent 错,否则污染指标)。
 
+## 十四、ODR 复现专题(新增,langchain-ai/open_deep_research 挖空复现;LangGraph supervisor 多 agent)
+
+> 专题进行中,每课封版追加。R0(2026-08-11):
+
+- **⭐ Context isolation(多 agent 的核心价值之一,面试话术)**:researcher 子图声明 `output=ResearcherOutputState`,几十条搜索垃圾在子图 context 内消化,过墙的只有 `compressed_research` 提炼稿——supervisor 的 context 不爆、不被污染、派活判断力不降。**深一层:output schema 是"结构保证"的防火墙,不靠下游节点自觉只取所需字段**——与 capstone"约束优于自觉"同一哲学,约束对象从模型换成未来的自己。
+- **⭐ 工具可以只是协议,不必可执行**:`ConductResearch`/`ResearchComplete` 是 Pydantic BaseModel,`bind_tools` 转成 schema;模型"调用"时无任何代码执行,`supervisor_tools` 节点拦截 tool call 当消息读(参数=派活任务书)。`ResearchComplete` 连参数都没有=纯"结束按钮"。对比裸 SDK(capstone):手写 JSON schema + dispatch;框架吃掉体力活,拦截逻辑仍要自己写。
+- **循环退出三件套**(任何 agent loop 通用推导框架):**预算耗尽 / 显式宣告 / 不调工具**。ODR 双循环各自成立:supervisor(`max_researcher_iterations=6` / `ResearchComplete` / 无 tool_calls),researcher(`max_react_tool_calls=10` / 同 / 同)。第三重预算 `max_concurrent_research_units=5` 限单轮并发,超发 call 收教育性报错 ToolMessage。**显式宣告的价值:预算退出是被动兜底(白烧成本延迟),显式信号让模型在"覆盖已足够"那刻主动收束,且 prompt 可教。**
+- **⭐ 推理模型分配框架**:看"**决策密度 × 调用频率**",不看"重要性"。调用频率越高越要便宜(ODR 的 summarization=最高频最机械,源码给 gpt-4.1-mini,四角色唯一便宜货),决策密度越高才配推理(research 角色=唯一决策密集)。发现过程:smoke test 里 deepseek-v4-flash 的 usage_metadata 显示 46/70 输出 token 是 reasoning。
+- **工程习惯(本课再犯"改一半/漏 return")**:每个函数写完、跑之前,回读 docstring 契约自问"返回的东西对吗"——30 秒动作专治此病。
+
 ## 待补(学完对应课程后回来填)
 - [x] ~~L6 遗留:单元测试系统学习~~ → **已还**:capstone 亲手写 9 条(tools 6 + policy 3),并系统学 mock/monkeypatch/惰性化可测性(见上「mock 深水区四连招」)
 - [x] ~~L9:LangChain 实战~~ → **已填**(见「九、L9」)

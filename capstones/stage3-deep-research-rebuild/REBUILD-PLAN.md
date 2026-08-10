@@ -82,3 +82,13 @@
 - **课程状态**:R0 未开始。
 - **下一步第一件事**:用户说"开始 R0"后——共创 DESIGN.md(先让用户凭记忆画三层图,再对照源码图纠偏)→ `uv add langchain-deepseek` → 确认 Google key 类型定搜索方案 → smoke test。
 - **软信息**:用户已通读过我的 ODR 架构讲解(三层图/reducer/gather fan-out/or True bug),R0 讲解可快进,重点放在"凭记忆复述"检验;用户 LangGraph 经验=stage2 的 agent_langgraph.py 单图重写(L9),**没写过子图和自定义 reducer**——R1/R3 是真正的新知识。
+
+### 2026-08-11 · R0 封版 ✅
+- **交付物**:DESIGN.md 定稿(含搜索选型=Tavily)· `lessons/r0/{notes,quiz,summary}.md + summary.pdf` · `tests/smoke/smoke_r0.py` 两条依赖验通 · interview-notes 新增「十四、ODR 复现专题」。
+- **依赖**:`langchain-deepseek==1.1.0`、`langchain-tavily==0.2.18` 已入 pyproject;`TAVILY_API_KEY` 已入 .env(用户 Google API 确认不可用)。
+- **quiz**:3/3(Q3"推理模型分配"初答方向反——把"重要"当理由;补讲"决策密度×调用频率"框架后变式题秒对)。
+- **软信息(R1 教学要注意)**:
+  - "改一半/漏 return"再犯(Tavily smoke 返回占位符)——已立规矩"写完回读契约再跑",R1 每个 TODO 验收时**主动问他有没有做这个动作**。
+  - 蓝图复述:主图结构一次全对,循环退出条件需支架才推出——结构记忆好,**机制推导是薄弱点**,R1 讲 Command 路由时多用"你觉得为什么"少用陈述。
+  - smoke 用了 `deepseek-v4-flash`(推理模型);四角色正式选型 R4 讨论,别忘。
+- **下一步第一件事**:用户说"开始 R1"后——生成 `src/deep_research/state.py`(Researcher 部分)+ `deep_researcher.py` 骨架(researcher / researcher_tools / 子图编译,~9 TODO)+ `tests/test_r1.py`(fake ChatModel,1 happy + 1 failure);fake search 工具我给现成放 utils.py。先讲 30 分钟:Command 路由 / bind_tools / reducer=operator.add,再放手写。
