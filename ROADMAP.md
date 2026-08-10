@@ -31,9 +31,13 @@
 ## 当前位置
 
 ```
-Layman ─ Beginner ─ [Intermediate ✅ 已扎实] ─▶ [Advanced 🚧 当前, L9✅ L10✅ Reflection✅ 部署✅ L11✅ L12✅ +Langfuse → L13] ─ Expert(不追)
+Layman ─ Beginner ─ [Intermediate ✅ 已扎实] ─▶ [Advanced 🚧 当前, L9✅ L10✅ Reflection✅ 部署✅ L11✅ L12✅ +Langfuse → 🚧L13(mac) ∥ 🚧ODR复现(win)] ─ Expert(不追)
                      L1–L8 + 两个 capstone            框架/评估/部署/可观测
 ```
+
+**🚧 两线并行(2026-08-11 起)**:
+- **L13**(mac 端):llm_client 作业+13 测试完工,**待用户重过验证消化**(块4/5为教练代写)。
+- **ODR 复现专题**(Windows 端,阶段三 capstone 前置):挖空复现 langchain-ai/open_deep_research(LangGraph supervisor 多 agent)。断点与课程路线见 `capstones/stage3-deep-research-rebuild/REBUILD-PLAN.md`;其扩展②(Langfuse)完成后可部分抵扣 L13。
 
 **手里的资产**：可写进简历的完整客服 Agent（三类能力 + 三道安全线 + 10 pytest + 封版）
 + **L9 框架对比 ADR**（裸 SDK vs LangGraph，`ADR-001-langgraph-vs-bare-sdk.md`，校招"能分析框架优劣"的直接证据）。

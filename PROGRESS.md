@@ -551,3 +551,13 @@ L8 作业早已封版；2026-07-27（本 session）又按新教学法补做了�
   materials 分时创建（notes/quiz 当场建，summary.pdf 封版才出）；每次 commit 后 `git push` 到 B6nux9。
 - **commit 前记得** `git diff` 扫一眼（别把 .DS_Store / 临时调试值/ key 文件误提交——历史上已发生过一次
   误提交 deepseek_api.txt+.DS_Store 需回滚，.gitignore 已加，但仍要养成 add 前看一眼的习惯）。
+
+## 🔷 ODR 复现专题 开工记录(2026-08-11)
+
+- **是什么**:新开阶段三前置专题——挖空复现 **langchain-ai/open_deep_research**(supervisor 多 agent 深度研究,LangGraph 官方出品)。动机:stage2 capstone 偏玩具,面试需要生产级框架系项目;调研过 Parlant/deer-flow/agent-service-toolkit/NVIDIA blueprint 等 8 个候选后选定(候选优劣与排除理由存于教练记忆)。
+- **模块位置**:`capstones/stage3-deep-research-rebuild/`。源码克隆在 `E:\Agent\open_deep_research`(Windows 机)。
+- **⚠️ 断点管理变更**:该专题的课程断点在模块内 **`REBUILD-PLAN.md` F 区**维护,本文件只记里程碑(开工/每课封版/结业)。后续 session 若用户说"继续 ODR/复现",直接去读 `capstones/stage3-deep-research-rebuild/REBUILD-PLAN.md`。
+- **课程路线**:R0 蓝图环境 → R1 researcher 子图纵切 → R2 压缩与上下文隔离 → R3 supervisor 并发派活 → R4 主图端到端 → R4.5 prompts 精读 → R5 配置层+diff 总复盘 → R6 扩展选单(checkpoint/HITL、Langfuse=抵扣L13、Send API、mini-eval=回扣L12、MCP=回扣L10)。
+- **技术定案**:DeepSeek 为主(`init_chat_model`,R0 需 `uv add langchain-deepseek`);搜索工具 R0 确认用户 Google key 类型,不能用回退 Tavily。
+- **与 L13 的关系(2026-08-11 合并 mac 端进度后修正)**:L13 已在 mac 端开工(llm_client 作业+13 测试完工,用户要求晚点重过,块4/5为教练代写需验证消化)——**两线并行**:L13 收尾在 mac 端继续,ODR 专题在 Windows 端推进;R6 扩展②(Langfuse 全链路)完成后仍可抵扣 L13 的可观测部分。两线不抢占,以用户当次坐下点名的为准。
+- **当前状态**:流程文件与目录骨架已建,R0 已开始(2026-08-11,Windows 端)。
