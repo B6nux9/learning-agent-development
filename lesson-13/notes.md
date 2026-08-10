@@ -95,8 +95,15 @@ resp = client.chat.completions.create(model=..., messages=..., tools=...)
   块 5 设计决定（已讲，可当面试题）：①**失败也要记账**=异常携带 metrics（最贵的调用是失败的,只记成功→延迟大盘漏最差样本,同 L8 度量陷阱）
   ②try/except/else(try 块最小化,return 在 else) ③**FATAL 不翻译**："把400包进服务不可用=把该修代码的问题伪装成该等待的问题,bug 要炸给人看不是兜给用户"
   ④`from exc`→`__cause__` 保留元凶,翻译异常不销毁证据(冒烟③⑥有断言版答案) ⑤getattr 双层防御取 usage(D 箱落地)。
-- 当前断点：**作业主文件五块全绿**。剩余：⑦测试正式化 test_llm_client.py(冒烟①-⑥移植成 pytest,建议用户自写找手感,门禁第二条)
-  → 下次坐下**反哺 capstone**：三处裸调用换 chat_with_retry + 构造 client 加 max_retries=0/timeout=8 + run() 捕 LLMUnavailable 走降级(用户检查题2答案变代码)
-  → 然后 §2 可观测性深化(Langfuse 手动埋点/score 回流) → §3 成本延迟 → quiz → 封版。
+- **测试正式化完成（2026-08-10，commit cd06bff）：13 passed**。过程：用户自写初版→**收集期 ImportError 0 条执行**
+  （llm_client.py 还被回退成空桩=编辑器旧缓冲事故,块4/5实现一度消失,git restore 找回——"版本历史是 git 的活"再验证）。
+  用户版三组病（已复盘）：A 挡路（SENTINEL 不在模块层/幽灵 import wsgiref/req≠REQ/SENTINELa typo→**又是没跑就交,本节第3次**）
+  B 语义（没按现行契约解包 tuple / `deadline=` 拼错被 **kwargs 静默吞 / 退避下界写 0.1=~10% flaky——**flaky test 比没有更糟,教团队"红了重跑"**）
+  C 灵魂缺失（sleeps fixture 注入 6 次断言 0 次 / 无 calls / 无 __cause__ / 无 metrics——"它红的时候,能红在你关心的事上吗"）。
+  教练重写版新增**行为文档测试** test_kwarg_typo_is_swallowed（把今天现场撞的 kwargs 吞 typo 坑钉成规格）；
+  compute_backoff 边界测试改抽样×4 攻位精确 `0<=`。llm_client 删掉 __main__ 冒烟（职责移交正式测试,门禁3）。
+- 当前断点：**作业代码全部完工（llm_client 13 测试绿）**。下一步（按序）：
+  ①**反哺 capstone**（⚠️尽量拉回用户亲手写）：三处裸调用换 chat_with_retry + client 构造加 max_retries=0/timeout=8 + run() 捕 LLMUnavailable 走降级
+  ② §2 可观测性深化(Langfuse 手动埋点/score 回流) ③ §3 成本延迟讲授 ④ quiz ⑤ 封版三门禁+summary.pdf+interview-notes(「十四」草稿见上方金句)。
 - ⚠️ 教学观察(下 session 注意)：本节后半用户连续三次委托代写(块4缺件/块4重写/块4+5)。已用"验证题+读代码审设计"保底学习量,
   但**动手量明显低于既往节奏**——反哺 capstone 与测试正式化两步应尽量拉回用户亲手写,至少让他做接线与断言。

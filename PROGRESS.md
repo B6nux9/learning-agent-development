@@ -494,8 +494,16 @@ L8 作业早已封版；2026-07-27（本 session）又按新教学法补做了�
     （transformers+peft+trl / LLaMA-Factory / unsloth）。
   - 求职逻辑：百度 JD3/JD4（智能体算法/大模型研发）后训练是硬通货，"亲手 SFT+DPO 过 + 有评估闭环"比多数应届生突出。
 
+  **🚧 L13 已开课、施工中（2026-08-10，macOS）——当前断点，详见 [`lesson-13/notes.md`](lesson-13/notes.md)**：
+  - §1 API 可靠性讲授完（失败分类学三箱+D箱 / 退避+jitter / Retry-After / deadline 预算 / 分层重试放大）。
+  - 作业 `lesson-13/homework/llm_client.py` 五块全部完工 + `test_llm_client.py` **13 测试绿**（commit cd06bff）。
+  - ⚠️ **用户当天状态不佳，明确要求"晚点重新过一遍"**：块 1-3 用户亲写（质量不错），
+    块 4/5/测试修复为**教练代写**——重过时优先让他讲解这几块 + 做 notes 里的验证题，确认消化再往下。
+  - 剩余：①反哺 capstone（三处裸调用换 chat_with_retry + client max_retries=0/timeout=8 + run() 捕 LLMUnavailable 降级，**尽量拉回用户亲手写**）
+    ② §2 可观测性深化（Langfuse 手动埋点/score 回流）③ §3 成本延迟 ④ quiz ⑤ 封版三门禁 + summary.pdf + interview-notes「十四」。
+
   **⭐ 下次坐下从这里选（校招优先级，边投边学；2026-08-10 定稿排序）**：
-  ① **L13 可观测/成本/延迟深化 + API 重试限流(429) + L13.5 Agent Harness**（JD2 整篇，Claude Code 锚点）——**下一个主推**。Langfuse 已实操,可深化(自定义 span/挂 LLM-judge 打分/dashboard)。
+  ① **L13 续完**（见上方施工中断点）——先带用户重过今天内容，再反哺 capstone。
   ② **模型后训练专项（SFT+RL）**（书 Ch7，见上方拍板记录）——L13 封版后紧接着开。
   ③ **L14 部署深化**（K8s，最小部署已做过 FastAPI+Docker）。
   ④ 其余研究向加分（书 Ch5 Coding/Ch8 self-improvement）：**Reflexion 重版**（跨 attempt 存 memory）· 代码审查加"真跑测试"执行反馈版（RLEF）· Skills 渐进披露实现（书 Ch2/4，L10 讲过没做）。
