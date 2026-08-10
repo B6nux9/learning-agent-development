@@ -89,5 +89,14 @@ resp = client.chat.completions.create(model=..., messages=..., tools=...)
   设计决定(已讲)：①`_retry_after_seconds` 单拎(脏活隔离,"别信外部输入哪怕来自服务端")
   ②预算检查写一次,两种 wait 汇流后过闸 ③monotonic 防墙钟回拨(注释写约束不写行为)。
   已出 2 道理解验证题(待答)：⑥为何 calls==1 不是 0 / deadline 管不到哪种卡住(答案:请求本身挂起,靠 client timeout=8.0 补)。
-- 当前断点：块 5 已布置(LLMUnavailable 统一翻译 + CallMetrics + 返回 tuple;FATAL 不翻译的理由要用户写进 docstring;
-  `raise ... from exc` 回扣 app.py)。建议用户自己写找回手感。块 5 完 → 测试正式化(test_llm_client.py) → 下次坐下反哺 capstone 三处裸调用。
+- **块 4(重写)+块 5 完工（2026-08-10，均教练代写，用户点名"你来完成"）**：冒烟 6/6，commit 8d0d517。
+  用户重写块 4 中途改为委托（曾布置掏空重写、参考版存 git 26568b9）。
+  两道验证题用户答对：⑥calls==1 因预算只裁决"等待"不裁决"开始" / deadline 管不到请求挂起→client timeout 补。
+  块 5 设计决定（已讲，可当面试题）：①**失败也要记账**=异常携带 metrics（最贵的调用是失败的,只记成功→延迟大盘漏最差样本,同 L8 度量陷阱）
+  ②try/except/else(try 块最小化,return 在 else) ③**FATAL 不翻译**："把400包进服务不可用=把该修代码的问题伪装成该等待的问题,bug 要炸给人看不是兜给用户"
+  ④`from exc`→`__cause__` 保留元凶,翻译异常不销毁证据(冒烟③⑥有断言版答案) ⑤getattr 双层防御取 usage(D 箱落地)。
+- 当前断点：**作业主文件五块全绿**。剩余：⑦测试正式化 test_llm_client.py(冒烟①-⑥移植成 pytest,建议用户自写找手感,门禁第二条)
+  → 下次坐下**反哺 capstone**：三处裸调用换 chat_with_retry + 构造 client 加 max_retries=0/timeout=8 + run() 捕 LLMUnavailable 走降级(用户检查题2答案变代码)
+  → 然后 §2 可观测性深化(Langfuse 手动埋点/score 回流) → §3 成本延迟 → quiz → 封版。
+- ⚠️ 教学观察(下 session 注意)：本节后半用户连续三次委托代写(块4缺件/块4重写/块4+5)。已用"验证题+读代码审设计"保底学习量,
+  但**动手量明显低于既往节奏**——反哺 capstone 与测试正式化两步应尽量拉回用户亲手写,至少让他做接线与断言。
