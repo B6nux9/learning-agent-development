@@ -417,6 +417,15 @@ json_schema 失败退 json_object,解析也失败就退 ReAct——每层有下�
 - **⭐ 推理模型分配框架**:看"**决策密度 × 调用频率**",不看"重要性"。调用频率越高越要便宜(ODR 的 summarization=最高频最机械,源码给 gpt-4.1-mini,四角色唯一便宜货),决策密度越高才配推理(research 角色=唯一决策密集)。发现过程:smoke test 里 deepseek-v4-flash 的 usage_metadata 显示 46/70 输出 token 是 reasoning。
 - **工程习惯(本课再犯"改一半/漏 return")**:每个函数写完、跑之前,回读 docstring 契约自问"返回的东西对吗"——30 秒动作专治此病。
 
+R1(2026-08-11,亲手写 researcher 子图后新增):
+
+- **⭐ Command + 类型注解 = 动态边的声明机制**:`Command(goto, update)` 让路由决定和状态更新一次交付,**决策发生在信息所在的地方**(不用为独立路由函数往 state 塞只为路由服务的字段);编译期 LangGraph 读返回注解 `Command[Literal[...]]` 注册可能目的地——所以 ReAct 循环两节点间零条 add_edge。对比:`add_conditional_edges` 声明静态条件边,Command 把边内联进节点。
+- **⭐ reducer 是并发写入的合并协议,不是语法糖**:声明在 state 字段注解第二槽(`Annotated[list, operator.add]`),引擎在应用 update 时调用,节点毫不知情。有 reducer 交**增量**、没 reducer 交**全量**——同一个 update 字典两种语义共存。深一层(自己推导出的):单线循环里"覆盖+全量"与 reducer 等价,**并发 fan-out 下碎裂**(同 superstep 多分支写同一字段,无 reducer 直接 `InvalidUpdateError`)。reducer 必须纯函数(`iconcat` 原地改会污染 checkpoint 快照)。约束优于自觉的状态版。
+- **工具三光谱**:能力(search,真干活)/ 记录(think_tool,一行回显但把反思固化进可审计的消息历史)/ 信号(ResearchComplete,施为句——调用即宣告,"响应"= 路由代码里的一次 if)。
+- **⭐ 计数点 × 检查点的相对位置 = 预算的松紧**:`max_react_tool_calls` 名不符实,数的是**模型调用轮数**非工具执行数(单轮并发 N 个工具只计 1);计数在 researcher、检查在 researcher_tools 执行工具**之后**——最后一轮搜索结果不浪费、消息历史无悬空 tool_call(provider 对残缺历史报 400);把计数挪到检查同节点会 off-by-one 松一格。
+- **state 放数据,不放能力**:工具是活对象(闭包/客户端连接)不可序列化,不进 state(checkpointer 要求 state 全量可存盘);重复组装工具箱的正确修法是 utils 层记忆化,不动 state 不动节点。
+- **id 配对机制**:tool_call 请求侧编号叫 `id`,回执侧 `ToolMessage(tool_call_id=...)` 钉回;provider 按 id 配对不按顺序(一条消息可并发多个调用)。错误也是 observation:工具异常转字符串喂回模型,让它自己换招。
+
 ## 待补(学完对应课程后回来填)
 - [x] ~~L6 遗留:单元测试系统学习~~ → **已还**:capstone 亲手写 9 条(tools 6 + policy 3),并系统学 mock/monkeypatch/惰性化可测性(见上「mock 深水区四连招」)
 - [x] ~~L9:LangChain 实战~~ → **已填**(见「九、L9」)

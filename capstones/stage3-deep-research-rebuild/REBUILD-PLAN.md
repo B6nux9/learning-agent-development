@@ -92,3 +92,15 @@
   - 蓝图复述:主图结构一次全对,循环退出条件需支架才推出——结构记忆好,**机制推导是薄弱点**,R1 讲 Command 路由时多用"你觉得为什么"少用陈述。
   - smoke 用了 `deepseek-v4-flash`(推理模型);四角色正式选型 R4 讨论,别忘。
 - **下一步第一件事**:用户说"开始 R1"后——生成 `src/deep_research/state.py`(Researcher 部分)+ `deep_researcher.py` 骨架(researcher / researcher_tools / 子图编译,~9 TODO)+ `tests/test_r1.py`(fake ChatModel,1 happy + 1 failure);fake search 工具我给现成放 utils.py。先讲 30 分钟:Command 路由 / bind_tools / reducer=operator.add,再放手写。
+
+### 2026-08-11 · R1 封版 ✅(quiz 欠账,见下)
+- **交付物**:researcher 子图全绿(10 TODO 全亲手,`tests/test_r1.py` 4/4,假模型离线跑)· `lessons/r1/{notes,quiz,summary}.md + summary.pdf` · interview-notes「十四」新增 R1 六条。骨架含脚手架:conftest.py、极简 configuration.py(R5 推倒重建)、prompts.py 源码原样复制、compress_research 占位节点。
+- **⚠️ quiz 未亲答**:当天课末信息量到顶("有点懵"),四题由教练讲评("今天我负责记忆")。**R2 开工第一件事:出 4 道变式题(Q1 动态边声明 / Q2 reducer 删除推演 / Q3 think_tool vs reflect / Q4 计数点位置),过了 R1 quiz 才关闭,再开 R2**。热身题战绩:Q1 对一半,Q2 方向对机制错(误用 token 论证)。
+- **首跑六类错(变式题出题素材)**:①`configurable_model = ...` 遮蔽全局(函数内赋值=局部判定,最深的坑)②with_retry 位置传参 ③Configuration 字段名想当然 ④reducer 交全量→翻倍膨胀(手动跑表 3→7 推醒的),修对后又写出不存在的 `response.messages` ⑤Command 位置传参 ⑥tool_calls 元素当对象访问。
+- **软信息(R2 教学要注意)**:
+  - 学习者主动要过标准答案(R1-8)和整体串讲两次——**吸收型学习倾向增强,警惕替代亲手推导**;R2 出骨架后先让他复述"这课要造什么"再动笔。
+  - 高光:自己推出"删 reducer 后交全量与现状等价"(教练补:并发下碎裂)——机制推导在进步,但要在**新知识**上验证。
+  - "回读契约"习惯本课两次见效(③号错自己抓出);继续在每个 TODO 验收时问。
+  - configuration.py 默认模型被他改成 `deepseek-v4-flash`(推理模型)——四角色选型 R4 讨论时收账。
+- **findings 候选(R5 汇总)**:①重复 get_all_tools 属低危缺陷,修法=utils 层记忆化(按影响工具箱的配置字段做 key);②"覆盖+全量单线等价、并发碎裂"论证;③`max_react_tool_calls` 名不符实(数模型轮数)。
+- **下一步第一件事**:用户说"开始 R2"(或"继续 ODR")后——先 4 道变式题关闭 R1 quiz → 讲 compress_research 真实现 + `ResearcherOutputState` 防火墙(`output=` 参数)+ token 韧性(`remove_up_to_last_ai_message`)→ 真搜索 Tavily 接入。对照源码 `deep_researcher.py:511-605`、`utils.py:599-886`,~7 TODO。
