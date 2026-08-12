@@ -104,3 +104,9 @@
   - configuration.py 默认模型被他改成 `deepseek-v4-flash`(推理模型)——四角色选型 R4 讨论时收账。
 - **findings 候选(R5 汇总)**:①重复 get_all_tools 属低危缺陷,修法=utils 层记忆化(按影响工具箱的配置字段做 key);②"覆盖+全量单线等价、并发碎裂"论证;③`max_react_tool_calls` 名不符实(数模型轮数)。
 - **下一步第一件事**:用户说"开始 R2"(或"继续 ODR")后——先 4 道变式题关闭 R1 quiz → 讲 compress_research 真实现 + `ResearcherOutputState` 防火墙(`output=` 参数)+ token 韧性(`remove_up_to_last_ai_message`)→ 真搜索 Tavily 接入。对照源码 `deep_researcher.py:511-605`、`utils.py:599-886`,~7 TODO。
+
+### 2026-08-12 · R1 quiz 关账 ✅(变式题 4/4)
+- 学习者次日主动补账。战绩详录在 `lessons/r1/quiz.md` 文末附表。要点:Q4' 三问秒对;Q1'/Q2' 均"结论对、机制表述错"(把覆盖语义说成 reducer、给裸 dict 节点脑补了 Command)——**R2 验收口令:说结论必带机制**。
+- 补账前学习者主动要求复核概念并两次给出自己的复述(ResearchComplete 声明/响应两半、Command 注解层 vs 实例层)——复述质量高,吸收型转主动输出的好迹象。
+- 新增 R5 辩题素材:researcher 的 goto 恒定却用 Command(源码风格统一 vs 最小权力原则)。
+- **下一步第一件事**:用户说"开始 R2"后直接开讲(quiz 债已清):compress_research 真实现 + `output=ResearcherOutputState` 防火墙 + token 韧性 + Tavily 真搜索。对照源码 `deep_researcher.py:511-605`、`utils.py:599-886`,~7 TODO。
