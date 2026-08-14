@@ -110,3 +110,14 @@
 - 补账前学习者主动要求复核概念并两次给出自己的复述(ResearchComplete 声明/响应两半、Command 注解层 vs 实例层)——复述质量高,吸收型转主动输出的好迹象。
 - 新增 R5 辩题素材:researcher 的 goto 恒定却用 Command(源码风格统一 vs 最小权力原则)。
 - **下一步第一件事**:用户说"开始 R2"后直接开讲(quiz 债已清):compress_research 真实现 + `output=ResearcherOutputState` 防火墙 + token 韧性 + Tavily 真搜索。对照源码 `deep_researcher.py:511-605`、`utils.py:599-886`,~7 TODO。
+
+### 2026-08-14 · R2 封版 ✅(quiz 4/4 亲答满分)
+- **交付物**:ResearcherOutputState 防火墙(用户自升 `output_schema`/`context_schema` 新参数名)· compress_research 真实现(模式切换+3 重试+截断+降级)· remove_up_to_last_ai_message · get_all_tools 按 search_api 切 Tavily/fake · 10/10 测试绿(R1 四条改道 raw_notes 审计通道)· `tests/smoke/smoke_r2.py` **researcher 子图首次真跑成功**(DeepSeek+Tavily,raw_notes 32,138 字符)· `lessons/r2/` 四件套。
+- **quiz**:4/4 亲手一次过,全部带机制带行号(对比 R1 讲评代过——推导能力跃升,"说结论必带机制"口令退役)。Q4 主动答出"bug 上游存活三层掩体"。
+- **findings 池(R5 汇总)现四条**:①`or True`(334)②原地 append 污染 state(538)③嗅探传 research_model 错位(569)④max_react_tool_calls 名不符实。其中②③我们的复现版已修——"读出并修掉官方仓库两个坑"是成型的面试素材。
+- **软信息(R3 教学要注意)**:
+  - **TODO 分组交付 + 每组先讲调用链定位**是用户明确要求的新模式(A→B→C→D 过一组开一组),R3 沿用;**批量文件改动走后台 agent,对话零 diff**(用户强反馈,已入长期记忆)。
+  - R2-5(重试循环)是**教练代写**(用户要求),已经 quiz Q2 反事实推导验证消化——但 R3 骨架难度应回归全亲手。
+  - 用户 quiz 水平跃升(带行号引证、主动答未问的问题)——**变式题难度可以提**;其 Q3 方案 B(裁剪+教育性回执)恰是 R3 超发教育的雏形,开讲时回接。
+  - configuration 默认 research_model=deepseek-v4-flash(推理模型)系用户自选,四角色选型 **R4 收账勿忘**;summarization 摘要管线欠条也在 R4。
+- **下一步第一件事**:用户说"开始 R3"后——supervisor 子图:`state.py` Supervisor 部分(SupervisorState + override_reducer + ConductResearch 协议)+ supervisor / supervisor_tools 节点 + `asyncio.gather` fan-out 子图 + 超发教育性报错 + 三重预算。对照源码 `deep_researcher.py:178-363`、`state.py:55-81`,~10 TODO 按分组交付(建议:A 状态与协议 → B supervisor 节点 → C supervisor_tools 拦截与 fan-out → D 预算与超发教育)。

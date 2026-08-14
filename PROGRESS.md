@@ -562,3 +562,4 @@ L8 作业早已封版；2026-07-27（本 session）又按新教学法补做了�
 - **与 L13 的关系(2026-08-11 合并 mac 端进度后修正)**:L13 已在 mac 端开工(llm_client 作业+13 测试完工,用户要求晚点重过,块4/5为教练代写需验证消化)——**两线并行**:L13 收尾在 mac 端继续,ODR 专题在 Windows 端推进;R6 扩展②(Langfuse 全链路)完成后仍可抵扣 L13 的可观测部分。两线不抢占,以用户当次坐下点名的为准。
 - **当前状态**:**R0 蓝图与环境 封版 ✅**(2026-08-11,Windows 端):DESIGN.md 定稿、DeepSeek+Tavily smoke 全通、quiz 3/3、interview-notes 新增「十四」。断点与 R1 指令见 `REBUILD-PLAN.md` F 区。
 - **当前状态**:**R1 Researcher 纵切 MVP 封版 ✅**(2026-08-11,Windows 端):researcher 子图 10 TODO 亲手完成,4/4 测试绿(假模型离线),interview-notes「十四」+R1 六条。**⚠️ quiz 未亲答(讲评代过),R2 开工先过 4 道变式题**。断点见 `REBUILD-PLAN.md` F 区。
+- **当前状态**:**R2 压缩与上下文隔离 封版 ✅**(2026-08-14,Windows 端):output_schema 防火墙 + compress 真实现 + token 韧性 + Tavily 真搜索,10/10 测试绿,**researcher 子图首次真跑冒烟通过**(DeepSeek+Tavily),**quiz 4/4 亲答满分**,复现版修掉源码两个坑(原地 append / 嗅探错位),interview-notes「十四」+R2 六条。断点与 R3 指令见 `REBUILD-PLAN.md` F 区。

@@ -13,6 +13,9 @@ class Configuration(BaseModel):
 
     research_model: str = "deepseek:deepseek-v4-flash"
     research_model_max_tokens: int = 8192
+    search_api: str = "fake"                # "fake" | "tavily";默认离线,测试拔网线纪律不破
+    compression_model: str = "deepseek:deepseek-chat"       # 压缩角色独立可配(四模型分工,R4 定选型)
+    compression_model_max_tokens: int = 8192
     max_react_tool_calls: int = 10          # ReAct 循环预算(R0 你推导过的"预算耗尽"退出线)
     max_structured_output_retries: int = 3
 

@@ -44,3 +44,12 @@ class ResearcherState(TypedDict):
     research_topic: str
     compressed_research: str
     raw_notes: list[str]
+
+
+# TODO(R2-1): 定义 ResearcherOutputState —— researcher 子图的"出墙滤网":
+#   只放允许过墙的两个字段:compressed_research(str)和 raw_notes(list[str],默认空列表)。
+#   源码用 BaseModel 定义它(和 ResearcherState 的 TypedDict 不同)——照做。
+#   想清楚再写:为什么 researcher_messages 不在里面?这个类删掉一个字段意味着什么?
+class ResearcherOutputState(BaseModel):
+    compressed_research: str
+    raw_notes: list[str] = []

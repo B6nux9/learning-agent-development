@@ -10,15 +10,25 @@ import asyncio
 from typing import Literal
 
 from langchain.chat_models import init_chat_model
-from langchain_core.messages import SystemMessage, ToolMessage
+from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
+from langchain_core.messages import filter_messages
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import StateGraph, START, END
 from langgraph.types import Command
 
 from deep_research.configuration import Configuration
-from deep_research.prompts import research_system_prompt
-from deep_research.state import ResearcherState
-from deep_research.utils import get_all_tools, get_today_str
+from deep_research.prompts import (
+    research_system_prompt,
+    compress_research_system_prompt,
+    compress_research_simple_human_message,
+)
+from deep_research.state import ResearcherState, ResearcherOutputState
+from deep_research.utils import (
+    get_all_tools,
+    get_today_str,
+    is_token_limit_exceeded,
+    remove_up_to_last_ai_message,
+)
 
 # 可配置模型:此处不指定具体模型,真正的 model/max_tokens 在每次调用时
 # 经 .with_config({...}) 注入(源码同款写法;测试则直接替换整个对象)。
@@ -141,18 +151,78 @@ async def researcher_tools(state: ResearcherState, config: RunnableConfig) -> Co
 
 
 async def compress_research(state: ResearcherState, config: RunnableConfig):
-    """R2 的主角:把整个 ReAct 对话压缩成过墙提炼稿。R1 先用占位实现保住图形状。"""
-    return {
-        "compressed_research": "[R2 填充] compression not implemented yet",
-        "raw_notes": [],
-    }
+    """把整个 ReAct 对话压缩成过墙提炼稿(防火墙内侧最后一道工序)。
 
+    行为契约(Group B 先写直线逻辑,失败重试是 Group C 的事):
+    - 压缩模型 = configurable_model.with_config({...}) —— 注意用 compression_model /
+      compression_model_max_tokens 两个字段,不是 research 那对(四模型分工)
+    - 模式切换:researcher_messages 尾部追加 HumanMessage(compress_research_simple_human_message),
+      system prompt 换成 compress_research_system_prompt(填 date)
+    - 调用后返回 dict,恰好是防火墙放行的两个字段:
+      compressed_research = str(response.content)
+      raw_notes = ["\\n".join(所有 tool 和 ai 消息的 content)]
+      (提取用 filter_messages(messages, include_types=["tool", "ai"]))
+    """
+    configurable = Configuration.from_runnable_config(config)
+    researcher_messages = state.get("researcher_messages", [])
+
+    # TODO(R2-3): 配置压缩模型 synthesizer_model —— configurable_model.with_config({...}),
+    #   model / max_tokens 取 compression 那对字段。
+    compression_model = (
+        configurable_model
+        .with_config({
+            "model": configurable.compression_model,
+            "max_tokens": configurable.compression_model_max_tokens
+        })
+    )
+
+
+    # TODO(R2-5): 教练代写(2026-08-13,学生要求)——封版前需能逐行讲回来,quiz 出变式验证。
+    # 模式切换:拼新列表而不是 append 原列表——state.get 拿到的就是状态里那个 list 对象,
+    # 原地 append 会把这条 HumanMessage 污染进图状态(⚠️ 源码 538 行原地 append,就是那个坑)
+    researcher_messages = researcher_messages + [HumanMessage(compress_research_simple_human_message)]
+
+    synthesis_attempts = 0
+    max_attempts = 3
+
+    while synthesis_attempts < max_attempts:
+        try:
+            # messages 在循环内重组:截断重试后 researcher_messages 已变短,不能用旧的
+            messages = [SystemMessage(compress_research_system_prompt.format(date=get_today_str()))] + researcher_messages
+            response = await compression_model.ainvoke(messages)
+            raw_notes = ["\n".join(
+                [str(m.content) for m in filter_messages(researcher_messages, include_types=["tool", "ai"])]
+            )]
+            return {
+                "compressed_research": str(response.content),
+                "raw_notes": raw_notes
+            }
+        except Exception as e:
+            synthesis_attempts += 1
+            # 传实际在干活的模型:compression_model(⚠️ 源码这里传了 research_model——嗅探对象错位)
+            if is_token_limit_exceeded(e, configurable.compression_model):
+                # 丢新保旧剪一轮再试;其他错误不剪,盲重试赌运气
+                researcher_messages = remove_up_to_last_ai_message(researcher_messages)
+            continue
+
+    # 兜底:压缩失败,原料照样过墙(防火墙第二字段 = 降级通道)
+    raw_notes = ["\n".join(
+        [str(m.content) for m in filter_messages(researcher_messages, include_types=["tool", "ai"])]
+    )]
+    return {
+        "compressed_research": "Error synthesizing research report: Maximum retries exceeded",
+        "raw_notes": raw_notes
+    }
 
 # TODO(R1-10): 组装并编译 researcher 子图,赋值给 researcher_subgraph:
 #   StateGraph(ResearcherState) → 加三个节点 → START 连到 researcher
 #   → compress_research 连到 END → .compile()
 #   思考:researcher ⇄ researcher_tools 之间为什么一条 add_edge 都不用写?(quiz 会考)
-researcher_subgraph = StateGraph(ResearcherState) \
+# TODO(R2-2): 给 StateGraph 加上防火墙和配置声明两个参数:
+#   output=ResearcherOutputState(过墙滤网:ainvoke 返回值只保留该 schema 里的字段)
+#   config_schema=Configuration(向外声明"本图认哪些 configurable 字段")
+#   记得补 import。改完先自己预测:test_r2 的防火墙测试断言返回值里有哪几个 key?
+researcher_subgraph = StateGraph(ResearcherState, output_schema=ResearcherOutputState, context_schema=Configuration) \
     .add_node("researcher", researcher) \
     .add_node("researcher_tools", researcher_tools) \
     .add_node("compress_research", compress_research) \

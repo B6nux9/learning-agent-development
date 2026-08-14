@@ -426,6 +426,15 @@ R1(2026-08-11,亲手写 researcher 子图后新增):
 - **state 放数据,不放能力**:工具是活对象(闭包/客户端连接)不可序列化,不进 state(checkpointer 要求 state 全量可存盘);重复组装工具箱的正确修法是 utils 层记忆化,不动 state 不动节点。
 - **id 配对机制**:tool_call 请求侧编号叫 `id`,回执侧 `ToolMessage(tool_call_id=...)` 钉回;provider 按 id 配对不按顺序(一条消息可并发多个调用)。错误也是 observation:工具异常转字符串喂回模型,让它自己换招。
 
+R2(2026-08-14,压缩 + 上下文隔离防火墙 + 真跑后新增):
+
+- **⭐ Context isolation 落地三要素**:①`output_schema=ResearcherOutputState` 是过墙滤网——ainvoke 返回前引擎按它过滤,不在 schema 里的字段留在墙内;②这是**结构保证**,supervisor 想拿垃圾山都拿不到,不是"自觉不拿";③放行的两个字段各有身份:compressed_research 是提炼稿,raw_notes 既是**降级通道**(压缩三连败时原料保命)又是**审计通道**(墙立后外部观察循环行为的唯一窗口——R1 测试全部改道它)。实测:32,138 字符留墙内,过墙一页纸。
+- **⭐ 边界用 BaseModel,内部用 TypedDict**(pydantic-at-the-edges):TypedDict 纯静态标注,零校验零开销、不支持默认值(源码 TypedDict 里的 `= 0` 是死代码);BaseModel 有运行时校验和能生效的默认值。内部状态=私有管道要轻快,输出=对外契约,边界上校验与默认值才有价值——与 FastAPI"内部普通对象、请求/响应边界 Pydantic"同一哲学,可串讲。
+- **模式切换双保险与截断相容**:压缩复用研究对话,靠 system prompt 换人设 + 尾部 HumanMessage 双通道下达任务;token 超限截断(丢新保旧,`remove_up_to_last_ai_message`)必然剪掉尾部 HumanMessage,但 messages 在重试循环内重组、任务书住在 SystemMessage 里每次都新鲜——单通道设计会被截断剪掉任务书本身。截断方向由价值分布决定:头部是任务书(丢头=失忆),尾部是最新增量。
+- **⭐ 错误分类学(重试策略三分)**:可修复(token 超限)→ 剪短重试;未知 → 盲重试;耗尽 → **降级不抛**(错误文案 + raw_notes 照常过墙,拒绝让一个子课题颗粒无收)。
+- **⭐ 跨 provider 嗅探必须传实际干活的模型**:源码 569 行传 research_model 而爆 token 的是 compression_model——异构 provider 下嗅探锁死错误分支,token 超限被误判为其他错误 → 不截断盲重试确定性三连败。bug 在上游长期存活的三层掩体:默认配置掩护(不识别前缀 → 全分支兜底救了它)+ 异构才触发 + 表象是"压缩失败"不是"检测失灵"。嗅探本身也严:验文案 + 异常类名 + 所属模块(文案会撒谎,出身不会)。
+- **预算单位 = 模型回合 ≠ 工具次数(真跑实证)**:smoke 设 max_react_tool_calls=3 却发生 5 次搜索——模型单轮并发多调,深度预算管不住宽度。附带发现:**工具 schema 反塑模型调用形态**(fake_search 收 list → 模型打包;TavilySearch 单 query → 模型并发多调)。
+
 ## 待补(学完对应课程后回来填)
 - [x] ~~L6 遗留:单元测试系统学习~~ → **已还**:capstone 亲手写 9 条(tools 6 + policy 3),并系统学 mock/monkeypatch/惰性化可测性(见上「mock 深水区四连招」)
 - [x] ~~L9:LangChain 实战~~ → **已填**(见「九、L9」)
