@@ -27,6 +27,29 @@ from typing_extensions import TypedDict
 class ResearchComplete(BaseModel):
     """Call this tool to indicate that the research is complete."""
 
+
+# TODO(R3-2): 定义 ConductResearch —— supervisor 的"派活协议工具":
+#   继承 BaseModel,含一个字段 research_topic: str,用 pydantic Field 加 description。
+#   和 ResearchComplete 一样永远不会被执行——supervisor_tools 按名字拦截它,
+#   把 research_topic 转手塞给 researcher_subgraph.ainvoke。
+#   注意:Field 的 description 是写给模型看的"任务书填写要求"——源码要求
+#   "单一课题 + 至少一段话的高细节描述"。想想为什么要在这里管模型:
+#   派活单写得太粗,researcher 拿到的 research_topic 就没法干活。
+#   (源码 state.py:15-19,description 原文照抄即可)
+
+
+###################
+# Reducer 定义(R3:同一个字段既要能追加、也要能整体重置)
+###################
+
+# TODO(R3-1): 定义 override_reducer(current_value, new_value) —— 双语义 reducer:
+#   - new_value 是 dict 且 .get("type") == "override" → 返回 new_value.get("value", new_value)
+#     (整体替换,丢弃旧值)
+#   - 否则 → operator.add(current_value, new_value)(普通追加,和 R1 的 operator.add 同款)
+#   回忆 R1 quiz:add reducer 下"写 0 等于没写"——没有任何 update 值能把字段清空。
+#   override_reducer 就是官方解法:在数据通道里内嵌一条控制协议。
+#   (R4 的 write_research_brief 会用 {"type": "override", "value": [...]} 重置 supervisor_messages)
+
 ###################
 # State 定义
 ###################
@@ -43,7 +66,7 @@ class ResearcherState(TypedDict):
     tool_call_iterations: int
     research_topic: str
     compressed_research: str
-    raw_notes: list[str]
+    raw_notes: Annotated[list[str], override_reducer]  # R3 升级:普通 list → override_reducer(源码同款)
 
 
 # TODO(R2-1): 定义 ResearcherOutputState —— researcher 子图的"出墙滤网":
@@ -52,4 +75,15 @@ class ResearcherState(TypedDict):
 #   想清楚再写:为什么 researcher_messages 不在里面?这个类删掉一个字段意味着什么?
 class ResearcherOutputState(BaseModel):
     compressed_research: str
-    raw_notes: list[str] = []
+    raw_notes: Annotated[list[str], override_reducer] = []  # R3 升级,同上
+
+
+# TODO(R3-3): 定义 SupervisorState(TypedDict)—— supervisor 子图的运行时状态,5 个字段:
+#   - supervisor_messages: 消息列表,挂 override_reducer(不是 operator.add——
+#     想想谁需要"重置"这个字段?提示:R4 主图,每次新研究要清场)
+#   - research_brief: str —— 研究任务书(R4 由主图写入;R3 测试直接注入)
+#   - notes: list[str],挂 override_reducer —— 研究成果汇总,supervisor 退出时
+#     从 ToolMessage 里收割,过墙给 R4 的 final_report 用
+#   - research_iterations: int —— supervisor 的循环预算计数器(对应 researcher 的
+#     tool_call_iterations,但预算语义有个关键差别,Group C 见)
+#   - raw_notes: list[str],挂 override_reducer —— 所有 researcher 的原始笔记聚合
