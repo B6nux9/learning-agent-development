@@ -11,7 +11,7 @@ import operator
 from typing import Annotated
 
 from langchain_core.messages import MessageLikeRepresentation
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
 
 ###################
@@ -36,6 +36,9 @@ class ResearchComplete(BaseModel):
 #   "单一课题 + 至少一段话的高细节描述"。想想为什么要在这里管模型:
 #   派活单写得太粗,researcher 拿到的 research_topic 就没法干活。
 #   (源码 state.py:15-19,description 原文照抄即可)
+class ConductResearch(BaseModel):
+    """Call this tool to conduct research on a specific topic."""
+    research_topic: Annotated[str, Field(description="A single research topic, described in at least one paragraph of high detail.")]
 
 
 ###################
@@ -49,6 +52,12 @@ class ResearchComplete(BaseModel):
 #   回忆 R1 quiz:add reducer 下"写 0 等于没写"——没有任何 update 值能把字段清空。
 #   override_reducer 就是官方解法:在数据通道里内嵌一条控制协议。
 #   (R4 的 write_research_brief 会用 {"type": "override", "value": [...]} 重置 supervisor_messages)
+def override_reducer(current_value, new_value):
+    if isinstance(new_value, dict) and new_value.get("type") == "override":
+        return new_value.get("value", new_value)
+    else:
+        return operator.add(current_value, new_value)
+
 
 ###################
 # State 定义
@@ -87,3 +96,9 @@ class ResearcherOutputState(BaseModel):
 #   - research_iterations: int —— supervisor 的循环预算计数器(对应 researcher 的
 #     tool_call_iterations,但预算语义有个关键差别,Group C 见)
 #   - raw_notes: list[str],挂 override_reducer —— 所有 researcher 的原始笔记聚合
+class SupervisorState(TypedDict):
+    supervisor_messages: Annotated[list[MessageLikeRepresentation], override_reducer]
+    research_brief: str
+    notes: Annotated[list[str], override_reducer]
+    research_iterations: int
+    raw_notes: Annotated[list[str], override_reducer]

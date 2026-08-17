@@ -30,7 +30,7 @@
 |---|---|---|
 | R1 · researcher 子图 ReAct 循环 | ✅ 封版 + quiz 变式题 4/4 关账 | `c4cc8c4` / `68b8cef` |
 | R2 · 压缩 + 防火墙 + token 韧性 + Tavily 真跑 | ✅ 封版(10 测试绿 + 冒烟通过 + quiz 4/4 亲答满分) | `b4be0b2` |
-| **R3 · Supervisor 与并发派活** | 🔶 **Group A 骨架已交付,用户正在填** | 本 commit |
+| **R3 · Supervisor 与并发派活** | ✅ 封版 ⚠️带债(quiz 未亲答 + R3-8/10/11 代写,R4 开工先关账) | 见 F 区 2026-08-17 |
 | R4 / R4.5 / R5 / R6 | ⬜ 未开 | — |
 
 **findings 池**(源码问题,R5 汇总成 findings.md):① `deep_researcher.py:334` 的 `or True`;② 538 行原地 `append` 污染 state;③ 569 行 `is_token_limit_exceeded` 错传 research_model(应为 compression_model);④ `max_react_tool_calls` 名不符实(计回合不计调用次数)。
@@ -94,4 +94,4 @@ supervisor ⇄ supervisor_tools 是 researcher ⇄ researcher_tools 的**镜像 
 | `capstones/.../lessons/r1/`, `lessons/r2/` | 各课讲义/quiz/总结 + PDF |
 | `capstones/.../src/deep_research/` | 复现主体(state / configuration / prompts / utils / deep_researcher) |
 | `capstones/.../tests/` | test_r1 / test_r2 / test_r3(Group A)+ smoke/ |
-| 源码参照 | 需要本地有一份 [langchain-ai/open_deep_research](https://github.com/langchain-ai/open_deep_research) clone 用于 diff 对照;旧机器在 `E:\Agent\open_deep_research`,新机器路径自便,告诉 Claude 位置即可 |
+| 源码参照 | 需要本地有一份 [langchain-ai/open_deep_research](https://github.com/langchain-ai/open_deep_research) clone 用于 diff 对照;旧机器在 `E:\Agent\open_deep_research`,**mac 端已就位:`reference/repos/open_deep_research/`(浅克隆,gitignore 内)** |

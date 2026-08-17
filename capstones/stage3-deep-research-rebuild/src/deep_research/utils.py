@@ -6,7 +6,7 @@
 
 from datetime import datetime
 
-from langchain_core.messages import AIMessage, MessageLikeRepresentation
+from langchain_core.messages import AIMessage, MessageLikeRepresentation, filter_messages
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langchain_tavily import TavilySearch
@@ -234,3 +234,13 @@ def remove_up_to_last_ai_message(messages: list[MessageLikeRepresentation]) -> l
         if isinstance(messages[i], AIMessage):
             return messages[:i]  # 截断到最后一条 AIMessage 之前的所有消息
     return messages  # 没有 AIMessage,原样返回
+
+
+def get_notes_from_tool_calls(messages: list[MessageLikeRepresentation]) -> list[str]:
+    """从 supervisor 对话里收割所有 ToolMessage 的 content(教练给现成,R3 Group C)。
+
+    supervisor 退出时用它把散落在对话里的研究成果(每条 ConductResearch 的
+    compressed_research 都装在 ToolMessage 里)打包成 notes,过墙给 R4 的
+    final_report。源码 utils.py:599-601 原样。
+    """
+    return [tool_msg.content for tool_msg in filter_messages(messages, include_types="tool")]

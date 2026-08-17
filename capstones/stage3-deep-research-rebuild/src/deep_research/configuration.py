@@ -17,6 +17,8 @@ class Configuration(BaseModel):
     compression_model: str = "deepseek:deepseek-chat"       # 压缩角色独立可配(四模型分工,R4 定选型)
     compression_model_max_tokens: int = 8192
     max_react_tool_calls: int = 10          # ReAct 循环预算(R0 你推导过的"预算耗尽"退出线)
+    max_researcher_iterations: int = 6      # supervisor 循环预算(R3:一轮=派活一批,和上面那条量纲不同)
+    max_concurrent_research_units: int = 5  # 单轮并发派活上限(R3 Group D:超发的单不执行,发教育性回执)
     max_structured_output_retries: int = 3
 
     @classmethod

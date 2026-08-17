@@ -435,6 +435,16 @@ R2(2026-08-14,压缩 + 上下文隔离防火墙 + 真跑后新增):
 - **⭐ 跨 provider 嗅探必须传实际干活的模型**:源码 569 行传 research_model 而爆 token 的是 compression_model——异构 provider 下嗅探锁死错误分支,token 超限被误判为其他错误 → 不截断盲重试确定性三连败。bug 在上游长期存活的三层掩体:默认配置掩护(不识别前缀 → 全分支兜底救了它)+ 异构才触发 + 表象是"压缩失败"不是"检测失灵"。嗅探本身也严:验文案 + 异常类名 + 所属模块(文案会撒谎,出身不会)。
 - **预算单位 = 模型回合 ≠ 工具次数(真跑实证)**:smoke 设 max_react_tool_calls=3 却发生 5 次搜索——模型单轮并发多调,深度预算管不住宽度。附带发现:**工具 schema 反塑模型调用形态**(fake_search 收 list → 模型打包;TavilySearch 单 query → 模型并发多调)。
 
+R3(2026-08-17,supervisor 子图 + 并发派活后新增;⚠️ R3-8/10/11 为教练代写,quiz 关账前面试引用需谨慎):
+
+- **⭐ 镜像 ReAct + 工具零真实执行**:supervisor ⇄ supervisor_tools 结构上复用 researcher 的 ReAct 骨架,但工具箱三件全协议(`ConductResearch`/`ResearchComplete`/`think_tool`),节点是按名字分拣的转运站——think 内联造 ToolMessage,Conduct 转手 `researcher_subgraph.ainvoke` gather fan-out,Complete 只改路由。"工具"在这一层退化成**结构化意图表达**,执行语义完全由拦截代码赋予。
+- **⭐ 前置检查 vs 后置检查 = 成本结构的函数**:researcher_tools 后置(先执行后查预算——最后一轮搜索结果不浪费);supervisor_tools 前置(进门先查三退出——一次"工具执行"= 整个子图跑一遍,十几次模型调用,先查再跑省真金白银)。**检查时机不是风格,是单位执行成本定的**。
+- **⭐ override_reducer:在数据通道内嵌控制协议**:`{"type": "override", "value": X}` 信封走整体替换,其余走 operator.add——"不出示信封,它就是 operator.add 本人"。解决"add reducer 下写 0 等于没写"(无法清场);代价是协议占用数据空间。**为什么必须清场**(三条后果,自行推导):system prompt 失去"位置 0+唯一"特权(Anthropic 直接 400)/ 旧剧本续写压力(模型模仿上一幕提前收工)/ token 永增不减。
+- **⭐ 成果双通道**:compressed_research 走 ToolMessage(模型可见,喂下轮派活决策);raw_notes 走 state(模型永不可见,审计留档过墙给 final_report)。把审计数据塞进消息通道 = 亲手拆掉 context isolation。
+- **超发教育(宽度预算)**:三重预算量纲——深度×2(researcher 轮数/supervisor 轮数)+ 宽度×1(`max_concurrent_research_units` 单轮并发派活)。超发单裁剪执行但**不能裁剪应答**(provider 规矩:每个 tool_call_id 必须有 ToolMessage,少一张下轮 400);回执把预算数字明说给模型 → 下轮自我修正,沉默丢弃则永远再犯。
+- **gather 的顺序契约**:`asyncio.gather` 保证结果顺序 == 任务提交顺序(与完成先后无关),zip 对齐 tool_call_id 因此安全;换成 as_completed 风格收集 = 张冠李戴的静默错配。
+- **findings ① 处理**:源码 334 行 `is_token_limit_exceeded(e, ...) or True` 永真死代码;复现版取诚实写法(无条件优雅收工,行为等价)——"读出并修掉官方仓库的坑"素材 +1(累计 3 处)。
+
 ## 待补(学完对应课程后回来填)
 - [x] ~~L6 遗留:单元测试系统学习~~ → **已还**:capstone 亲手写 9 条(tools 6 + policy 3),并系统学 mock/monkeypatch/惰性化可测性(见上「mock 深水区四连招」)
 - [x] ~~L9:LangChain 实战~~ → **已填**(见「九、L9」)

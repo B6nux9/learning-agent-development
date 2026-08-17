@@ -121,3 +121,11 @@
   - 用户 quiz 水平跃升(带行号引证、主动答未问的问题)——**变式题难度可以提**;其 Q3 方案 B(裁剪+教育性回执)恰是 R3 超发教育的雏形,开讲时回接。
   - configuration 默认 research_model=deepseek-v4-flash(推理模型)系用户自选,四角色选型 **R4 收账勿忘**;summarization 摘要管线欠条也在 R4。
 - **下一步第一件事**:用户说"开始 R3"后——supervisor 子图:`state.py` Supervisor 部分(SupervisorState + override_reducer + ConductResearch 协议)+ supervisor / supervisor_tools 节点 + `asyncio.gather` fan-out 子图 + 超发教育性报错 + 三重预算。对照源码 `deep_researcher.py:178-363`、`state.py:55-81`,~10 TODO 按分组交付(建议:A 状态与协议 → B supervisor 节点 → C supervisor_tools 拦截与 fan-out → D 预算与超发教育)。
+
+### 2026-08-17 · R3 封版 ⚠️(带债封版:quiz 未亲答 + 三段代写)
+- **交付物**:supervisor 子图全绿——override_reducer/ConductResearch/SupervisorState(A)· supervisor 节点(B)· supervisor_tools 前置三退出+think 拦截+gather fan-out+子图编译(C)· 预算切片+超发教育+except 兜底(D)。`tests/test_r3.py` 20/20,全套回归 30/30。`lessons/r3/` 四件套。interview-notes「十四」+R3 七条。
+- **战绩**:亲手 R3-1~7、R3-9(其中 R3-2 栽 pydantic 裸字符串、R3-8 首写栽字段名+漏 return 三犯);**教练代写 R3-8(两次,含清空重写)、R3-10、R3-11**——学习者连续要求代写,教练劝亲手重写清债,学习者选择直接封版。吸收型倾向本课明显回潮(R1 F 区预警成真),**R4 教学需强制回归亲手**。
+- **⚠️ 债务(R4 开工第一件事,不清不开课)**:亲答 `lessons/r3/quiz.md` 全卷 5 题(Q1/Q2 押 R3-8,Q3 押 R3-10,Q4 押 R3-11,Q5 串联三重预算)。答题规矩:说结论必带机制。课中已过的验收追问(override 三后果/信封机制)不重复考。
+- **findings 池更新**:① `or True`(334)本课处理——复现版取诚实写法,与源码差异总账现 3 处(①334 ②538 ③569),④max_react_tool_calls 名不符实待 R5。
+- **本机环境**:mac 端源码 clone 补齐于 `reference/repos/open_deep_research/`(gitignore 内);PDF 用 `uv run --with markdown` + Chrome headless(PROGRESS「PDF 生成方式」mac 条目验证可用)。
+- **下一步第一件事**:用户说"开始 R4"(或"继续 ODR")后——**先 quiz 关账**,再开 R4 主图:AgentState/AgentInputState + ClarifyWithUser/ResearchQuestion 协议(state.py)→ clarify_with_user / write_research_brief(override 信封在这里兑现,回接 R3)/ final_report_generation 三节点 → 主图编译端到端。对照源码 `deep_researcher.py:365-末尾`、`state.py:24-54`。**两笔旧账本课必收**:①四角色选型讨论(research_model=deepseek-v4-flash 系推理模型,用户 R0 自选;summarization 摘要管线欠条);②R4 开工时 supervisor system prompt 的 override 写入正好验证 R3 Group B 的"不拼 prompt"设计。
