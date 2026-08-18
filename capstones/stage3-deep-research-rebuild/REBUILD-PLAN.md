@@ -129,3 +129,9 @@
 - **findings 池更新**:① `or True`(334)本课处理——复现版取诚实写法,与源码差异总账现 3 处(①334 ②538 ③569),④max_react_tool_calls 名不符实待 R5。
 - **本机环境**:mac 端源码 clone 补齐于 `reference/repos/open_deep_research/`(gitignore 内);PDF 用 `uv run --with markdown` + Chrome headless(PROGRESS「PDF 生成方式」mac 条目验证可用)。
 - **下一步第一件事**:用户说"开始 R4"(或"继续 ODR")后——**先 quiz 关账**,再开 R4 主图:AgentState/AgentInputState + ClarifyWithUser/ResearchQuestion 协议(state.py)→ clarify_with_user / write_research_brief(override 信封在这里兑现,回接 R3)/ final_report_generation 三节点 → 主图编译端到端。对照源码 `deep_researcher.py:365-末尾`、`state.py:24-54`。**两笔旧账本课必收**:①四角色选型讨论(research_model=deepseek-v4-flash 系推理模型,用户 R0 自选;summarization 摘要管线欠条);②R4 开工时 supervisor system prompt 的 override 写入正好验证 R3 Group B 的"不拼 prompt"设计。
+
+### 2026-08-18 · R3 quiz 关账 ✅(5/5,代写债销账)
+- 战绩详录 `lessons/r3/quiz.md` 文末附表。亮点:Q2 反驳出题提示的前提(带行号);Q3c 超范围发现异常路径丢弃已付费成果;Q5 金句"治理强度对齐单位成本"。唯一修正:Q4a 把复现版的 NameError 机制安到了源码头上(源码实际是 fall-through 后延迟一轮 provider 400)——结构差异细节,结论与框架全对。
+- **R3-8/10/11 代写债经推导验证消化,销账**。上课吸收、quiz 全对的模式本轮成立,但 R4 作业仍回归亲手优先。
+- **措辞规约(2026-08-17 用户反馈,已入长期记忆)**:弃比喻性行话(fan-out/派活/收割/回礼等),用直接技术表述;标准术语英文保留。R4 起的讲义与注释执行。
+- **下一步**:开 R4 主图(见上条 2026-08-17 的 R4 指令与两笔旧账)。
